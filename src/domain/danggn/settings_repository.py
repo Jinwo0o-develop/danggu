@@ -1,47 +1,22 @@
-import json
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-
-DATA_FILE = DATA_DIR / "danggn_settings.json"
-
-DEFAULT_SETTINGS: dict = {"auto_cancel_days": 7}
+"""SettingsRepository — 앱 설정 저장소 (Supabase)."""
+from src.core.supabase_client import get_supabase
 
 
 class SettingsRepository:
-    """Singleton JSON repository for app-level settings."""
-
-    _instance: "SettingsRepository | None" = None
-
-    def __new__(cls) -> "SettingsRepository":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
     def __init__(self) -> None:
-        if self._initialized:
-            return
-        DATA_FILE.parent.mkdir(exist_ok=True)
-        if not DATA_FILE.exists():
-            DATA_FILE.write_text(
-                json.dumps(DEFAULT_SETTINGS, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        self._initialized = True
-
-    def _load(self) -> dict:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-
-    def _save(self, data: dict) -> None:
-        DATA_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        self._db = get_supabase()
 
     def get_auto_cancel_days(self) -> int:
-        return int(self._load().get("auto_cancel_days", 7))
+        r = (
+            self._db.table("danggn_settings")
+            .select("value")
+            .eq("key", "auto_cancel_days")
+            .maybe_single()
+            .execute()
+        )
+        return int(r.data["value"]) if r.data else 7
 
     def set_auto_cancel_days(self, days: int) -> None:
-        settings = self._load()
-        settings["auto_cancel_days"] = days
-        self._save(settings)
+        self._db.table("danggn_settings").upsert(
+            {"key": "auto_cancel_days", "value": str(days)}
+        ).execute()

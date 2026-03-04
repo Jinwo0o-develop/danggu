@@ -1,28 +1,16 @@
-"""
-ReviewRepository — 후기 데이터 저장소 (Singleton).
-
-BaseJsonRepository 상속으로 Singleton·_load·_save·_next_id 자동 확보.
-"""
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-from src.core.repository import BaseJsonRepository
+"""ReviewRepository — 후기 데이터 저장소 (Supabase)."""
+from src.core.supabase_client import get_supabase
 from src.domain.danggn.schemas import ReviewCreate
 
 
-class ReviewRepository(BaseJsonRepository):
-    """Singleton JSON repository for reviews."""
-
-    @property
-    def file_path(self) -> Path:
-        return DATA_DIR / "danggn_reviews.json"
+class ReviewRepository:
+    def __init__(self) -> None:
+        self._db = get_supabase()
 
     def get_all(self) -> list[dict]:
-        return self._load()
+        r = self._db.table("danggn_reviews").select("*").order("id").execute()
+        return r.data or []
 
     def create(self, data: ReviewCreate) -> dict:
-        reviews = self._load()
-        new_review = {"id": self._next_id(reviews), **data.model_dump()}
-        reviews.append(new_review)
-        self._save(reviews)
-        return new_review
+        r = self._db.table("danggn_reviews").insert(data.model_dump()).execute()
+        return r.data[0]

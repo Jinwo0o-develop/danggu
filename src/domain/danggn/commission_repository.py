@@ -1,9 +1,5 @@
-import json
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-
-DATA_FILE = DATA_DIR / "danggn_commission_rates.json"
+"""CommissionRepository — 카테고리별 수수료율 저장소 (Supabase)."""
+from src.core.supabase_client import get_supabase
 
 DEFAULT_RATES: dict[str, float] = {
     "전자제품": 0.20,
@@ -14,50 +10,46 @@ DEFAULT_RATES: dict[str, float] = {
 
 
 class CommissionRepository:
-    """Singleton JSON repository for category commission rates."""
-
-    _instance: "CommissionRepository | None" = None
-
-    def __new__(cls) -> "CommissionRepository":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
     def __init__(self) -> None:
-        if self._initialized:
-            return
-        DATA_FILE.parent.mkdir(exist_ok=True)
-        if not DATA_FILE.exists():
-            DATA_FILE.write_text(
-                json.dumps(DEFAULT_RATES, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        self._initialized = True
+        self._db = get_supabase()
 
-    def _load(self) -> dict[str, float]:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-
-    def _save(self, data: dict[str, float]) -> None:
-        DATA_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+    def _rows_to_dict(self, rows: list[dict]) -> dict[str, float]:
+        return {row["category"]: row["rate"] for row in rows}
 
     def get_all(self) -> dict[str, float]:
-        return self._load()
+        r = self._db.table("danggn_commission_rates").select("*").execute()
+        return self._rows_to_dict(r.data or [])
 
     def get_categories(self) -> list[str]:
-        return list(self._load().keys())
+        r = self._db.table("danggn_commission_rates").select("category").execute()
+        return [row["category"] for row in (r.data or [])]
 
     def get_rate(self, category: str) -> float:
-        """Return commission rate for the given category. Falls back to '기타'."""
-        rates = self._load()
-        return rates.get(category, rates.get("기타", 0.15))
+        """카테고리 수수료율 반환. 없으면 '기타' 요율로 폴백."""
+        r = (
+            self._db.table("danggn_commission_rates")
+            .select("rate")
+            .eq("category", category)
+            .maybe_single()
+            .execute()
+        )
+        if r.data:
+            return r.data["rate"]
+        # 폴백: '기타' 조회
+        r2 = (
+            self._db.table("danggn_commission_rates")
+            .select("rate")
+            .eq("category", "기타")
+            .maybe_single()
+            .execute()
+        )
+        return r2.data["rate"] if r2.data else DEFAULT_RATES["기타"]
 
     def set_rate(self, category: str, rate: float) -> None:
-        rates = self._load()
-        rates[category] = rate
-        self._save(rates)
+        self._db.table("danggn_commission_rates").upsert(
+            {"category": category, "rate": rate}
+        ).execute()
 
     def save_all(self, rates: dict[str, float]) -> None:
-        self._save(rates)
+        rows = [{"category": cat, "rate": r} for cat, r in rates.items()]
+        self._db.table("danggn_commission_rates").upsert(rows).execute()

@@ -1,64 +1,48 @@
-"""
-CustomerRepository — 고객 계정 저장소 (Singleton).
-
-BaseJsonRepository 상속으로 Singleton·_load·_save·_next_id 자동 확보.
-"""
-from datetime import datetime
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-from src.core.repository import BaseJsonRepository
+"""CustomerRepository — 고객 계정 저장소 (Supabase)."""
 from src.core.security import hash_password
+from src.core.supabase_client import get_supabase
 from src.domain.customer.schemas import CustomerCreate
 
 
-class CustomerRepository(BaseJsonRepository):
-    """Singleton JSON repository for customer accounts."""
-
-    @property
-    def file_path(self) -> Path:
-        return DATA_DIR / "customers.json"
+class CustomerRepository:
+    def __init__(self) -> None:
+        self._db = get_supabase()
 
     # ── 조회 ──────────────────────────────────────────────────────
 
     def get_by_email(self, email: str) -> dict | None:
-        return next((c for c in self._load() if c["email"] == email), None)
+        r = self._db.table("customers").select("*").eq("email", email).maybe_single().execute()
+        return r.data
 
     def get_by_id(self, customer_id: int) -> dict | None:
-        return next((c for c in self._load() if c["id"] == customer_id), None)
+        r = self._db.table("customers").select("*").eq("id", customer_id).maybe_single().execute()
+        return r.data
 
     def get_all(self) -> list[dict]:
-        return self._load()
+        r = self._db.table("customers").select("*").order("id").execute()
+        return r.data or []
 
     # ── 쓰기 ──────────────────────────────────────────────────────
 
     def create(self, data: CustomerCreate) -> dict:
-        customers = self._load()
-        new_customer = {
-            "id": self._next_id(customers),
+        payload = {
             "email": data.email,
             "hashed_password": hash_password(data.password),
             "name": data.name,
             "phone": data.phone,
-            "created_at": datetime.now().isoformat(timespec="seconds"),
         }
-        customers.append(new_customer)
-        self._save(customers)
-        return new_customer
+        r = self._db.table("customers").insert(payload).execute()
+        return r.data[0]
 
     def update_phone(self, customer_id: int, phone: str) -> dict | None:
-        customers = self._load()
-        for i, c in enumerate(customers):
-            if c["id"] == customer_id:
-                customers[i] = {**c, "phone": phone}
-                self._save(customers)
-                return customers[i]
-        return None
+        r = (
+            self._db.table("customers")
+            .update({"phone": phone})
+            .eq("id", customer_id)
+            .execute()
+        )
+        return r.data[0] if r.data else None
 
     def delete(self, customer_id: int) -> bool:
-        customers = self._load()
-        filtered = [c for c in customers if c["id"] != customer_id]
-        if len(filtered) == len(customers):
-            return False
-        self._save(filtered)
-        return True
+        r = self._db.table("customers").delete().eq("id", customer_id).execute()
+        return bool(r.data)

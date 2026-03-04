@@ -105,8 +105,8 @@ async def register(
         return _error("등록 키가 올바르지 않거나 이미 사용된 키입니다.")
     if len(uname) < 2:
         return _error("아이디는 2자 이상이어야 합니다.")
-    if len(password) < 6:
-        return _error("비밀번호는 6자 이상이어야 합니다.")
+    if len(password) < 12:
+        return _error("비밀번호는 12자 이상이어야 합니다.")
     if password != password_confirm:
         return _error("비밀번호가 일치하지 않습니다.")
 

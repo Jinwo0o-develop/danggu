@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,8 +11,15 @@ _INSECURE_DEFAULT = "dev-secret-key-change-me"
 class Settings(BaseSettings):
     app_env: str = "development"  # "production"으로 설정 시 HTTPS 강제
     secret_key: str = _INSECURE_DEFAULT  # .env.local 의 SECRET_KEY 로 반드시 교체
-    data_dir: Path = Path("data")
     admin_register_key: str = ""  # 비어 있으면 회원가입 비활성화
+
+    # Supabase
+    supabase_url: str = ""
+    supabase_key: str = ""  # service_role key 권장
+
+    # Upstash Redis
+    upstash_redis_rest_url: str = ""
+    upstash_redis_rest_token: str = ""
 
     @property
     def is_production(self) -> bool:

@@ -44,6 +44,7 @@
   <div class="error">{{ error }}</div>
   {% endif %}
   <form method="post" action="/customer/login">
+    {{ csrf_input(request) | safe }}
     <div class="form-group">
       <label for="email">이메일</label>
       <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">

@@ -1,35 +1,36 @@
 """
-EventLogRepository — Observer 구현체 (Singleton).
+EventLogRepository — Observer 구현체 (Supabase).
 
-상태 변경 이벤트를 data/danggn_event_logs.json 에 영속화한다.
-BaseJsonRepository 상속으로 Singleton·_load·_save 자동 확보.
+상태 변경 이벤트를 danggn_event_logs 테이블에 영속화한다.
+state.py의 StatusChangedEvent.to_dict()는 'occurred_at' 키를 사용하며,
+DB 컬럼명도 occurred_at으로 일치시킨다.
 """
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-from src.core.repository import BaseJsonRepository
+from src.core.supabase_client import get_supabase
 from src.domain.danggn.state import StatusChangedEvent, StatusObserver
 
 
-class EventLogRepository(BaseJsonRepository, StatusObserver):
-    """Singleton Observer — 상태 변경 이벤트를 JSON에 영속화."""
-
-    @property
-    def file_path(self) -> Path:
-        return DATA_DIR / "danggn_event_logs.json"
+class EventLogRepository(StatusObserver):
+    def __init__(self) -> None:
+        self._db = get_supabase()
 
     # ── Observer 인터페이스 ────────────────────────────────────────
 
     def on_status_changed(self, event: StatusChangedEvent) -> None:
-        """이벤트를 JSON 파일에 append."""
-        logs = self._load()
-        logs.append({"id": self._next_id(logs), **event.to_dict()})
-        self._save(logs)
+        """이벤트를 Supabase에 insert."""
+        self._db.table("danggn_event_logs").insert(event.to_dict()).execute()
 
     # ── 조회 ──────────────────────────────────────────────────────
 
     def get_all(self) -> list[dict]:
-        return self._load()
+        r = self._db.table("danggn_event_logs").select("*").order("id").execute()
+        return r.data or []
 
     def get_by_application_id(self, application_id: int) -> list[dict]:
-        return [lg for lg in self._load() if lg["application_id"] == application_id]
+        r = (
+            self._db.table("danggn_event_logs")
+            .select("*")
+            .eq("application_id", application_id)
+            .order("id")
+            .execute()
+        )
+        return r.data or []

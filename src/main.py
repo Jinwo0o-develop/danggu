@@ -45,6 +45,36 @@ class HSTSMiddleware:
         await self.app(scope, receive, send_with_hsts)
 
 
+class SecurityHeadersMiddleware:
+    """모든 응답에 기본 보안 헤더를 추가합니다."""
+
+    _HEADERS: list[tuple[bytes, bytes]] = [
+        (b"x-content-type-options", b"nosniff"),
+        (b"x-frame-options", b"DENY"),
+        (b"referrer-policy", b"strict-origin-when-cross-origin"),
+    ]
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                existing_keys = {k.lower() for k, _ in headers}
+                for key, value in self._HEADERS:
+                    if key not in existing_keys:
+                        headers.append((key, value))
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI()
@@ -56,6 +86,8 @@ app.add_exception_handler(
         content={"detail": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."},
     ),
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 if settings.is_production:
     app.add_middleware(HSTSMiddleware)
@@ -90,7 +122,7 @@ async def nanumsell(request: Request) -> HTMLResponse:
 PAI_CHAT_DIST = BASE_DIR.parent / "PAI_CHAT" / "dist"
 
 
-@app.get("/PAI")
+@app.get("/PAI", response_model=None)
 async def pai_chat_index() -> FileResponse | RedirectResponse:
     """슬래시 없는 /PAI 경로에서 직접 index.html을 반환 (리다이렉트 방지)."""
     if not PAI_CHAT_DIST.exists():

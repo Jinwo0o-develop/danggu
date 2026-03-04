@@ -1,37 +1,19 @@
-import json
-from pathlib import Path
-
-from src.core.paths import DATA_DIR
-
-DATA_FILE = DATA_DIR / "menus.json"
+"""MenuRepository — 점심 메뉴 저장소 (Supabase)."""
+from src.core.supabase_client import get_supabase
 
 
 class MenuRepository:
     def __init__(self) -> None:
-        DATA_FILE.parent.mkdir(exist_ok=True)
-        if not DATA_FILE.exists():
-            DATA_FILE.write_text("[]", encoding="utf-8")
-
-    def _load(self) -> list[dict]:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-
-    def _save(self, data: list[dict]) -> None:
-        DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        self._db = get_supabase()
 
     def get_all(self) -> list[dict]:
-        return self._load()
+        r = self._db.table("menus").select("*").order("id").execute()
+        return r.data or []
 
     def add(self, emoji: str, name: str, desc: str) -> dict:
-        menus = self._load()
-        new_menu = {"emoji": emoji, "name": name, "desc": desc}
-        menus.append(new_menu)
-        self._save(menus)
-        return new_menu
+        r = self._db.table("menus").insert({"emoji": emoji, "name": name, "desc": desc}).execute()
+        return r.data[0]
 
     def delete(self, name: str) -> bool:
-        menus = self._load()
-        filtered = [m for m in menus if m["name"] != name]
-        if len(filtered) == len(menus):
-            return False
-        self._save(filtered)
-        return True
+        r = self._db.table("menus").delete().eq("name", name).execute()
+        return bool(r.data)

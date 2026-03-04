@@ -1,27 +1,13 @@
-import json
+"""RegisterKeyRepository — 관리자 등록 키 저장소 (Supabase)."""
 import secrets
 import string
-from datetime import datetime
-from pathlib import Path
 
-from src.core.paths import DATA_DIR
-
-DATA_FILE = DATA_DIR / "admin_register_keys.json"
+from src.core.supabase_client import get_supabase
 
 
 class RegisterKeyRepository:
     def __init__(self) -> None:
-        DATA_FILE.parent.mkdir(exist_ok=True)
-        if not DATA_FILE.exists():
-            DATA_FILE.write_text("[]", encoding="utf-8")
-
-    def _load(self) -> list[dict]:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-
-    def _save(self, data: list[dict]) -> None:
-        DATA_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        self._db = get_supabase()
 
     @staticmethod
     def _make_key() -> str:
@@ -29,31 +15,39 @@ class RegisterKeyRepository:
         return "".join(secrets.choice(alphabet) for _ in range(12))
 
     def create(self, created_by: str) -> dict:
-        keys = self._load()
-        existing = {k["key"] for k in keys}
+        # 중복 없는 키 생성
         key = self._make_key()
-        while key in existing:
+        while self.get_by_key(key) is not None:
             key = self._make_key()
-        new_id = max((k["id"] for k in keys), default=0) + 1
-        record = {
-            "id": new_id,
+        payload = {
             "key": key,
             "created_by": created_by,
-            "created_at": datetime.now().isoformat(timespec="seconds"),
             "used": False,
             "used_by": None,
             "used_at": None,
             "revoked": False,
         }
-        keys.append(record)
-        self._save(keys)
-        return record
+        r = self._db.table("admin_register_keys").insert(payload).execute()
+        return r.data[0]
 
     def get_all(self) -> list[dict]:
-        return sorted(self._load(), key=lambda k: k["id"], reverse=True)
+        r = (
+            self._db.table("admin_register_keys")
+            .select("*")
+            .order("id", desc=True)
+            .execute()
+        )
+        return r.data or []
 
     def get_by_key(self, key: str) -> dict | None:
-        return next((k for k in self._load() if k["key"] == key), None)
+        r = (
+            self._db.table("admin_register_keys")
+            .select("*")
+            .eq("key", key)
+            .maybe_single()
+            .execute()
+        )
+        return r.data
 
     def is_valid(self, key: str) -> bool:
         record = self.get_by_key(key)
@@ -61,29 +55,32 @@ class RegisterKeyRepository:
 
     def consume(self, key: str, used_by: str) -> bool:
         """사용 처리. 이미 사용됐거나 폐지된 키는 False 반환."""
-        keys = self._load()
-        for i, k in enumerate(keys):
-            if k["key"] == key:
-                if k["used"] or k["revoked"]:
-                    return False
-                keys[i] = {
-                    **k,
-                    "used": True,
-                    "used_by": used_by,
-                    "used_at": datetime.now().isoformat(timespec="seconds"),
-                }
-                self._save(keys)
-                return True
-        return False
+        record = self.get_by_key(key)
+        if record is None or record["used"] or record["revoked"]:
+            return False
+        r = (
+            self._db.table("admin_register_keys")
+            .update({"used": True, "used_by": used_by, "used_at": "now()"})
+            .eq("key", key)
+            .execute()
+        )
+        return bool(r.data)
 
     def revoke(self, key_id: int) -> bool:
         """폐지 처리. 이미 사용된 키는 False 반환."""
-        keys = self._load()
-        for i, k in enumerate(keys):
-            if k["id"] == key_id:
-                if k["used"]:
-                    return False
-                keys[i] = {**k, "revoked": True}
-                self._save(keys)
-                return True
-        return False
+        r_find = (
+            self._db.table("admin_register_keys")
+            .select("used")
+            .eq("id", key_id)
+            .maybe_single()
+            .execute()
+        )
+        if not r_find.data or r_find.data["used"]:
+            return False
+        r = (
+            self._db.table("admin_register_keys")
+            .update({"revoked": True})
+            .eq("id", key_id)
+            .execute()
+        )
+        return bool(r.data)

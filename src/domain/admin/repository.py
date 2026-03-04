@@ -1,46 +1,26 @@
-import json
-from pathlib import Path
+"""
+AdminRepository — 레거시 단일 관리자 자격증명 조회 (Supabase).
 
-from src.core.security import hash_password
-
-DATA_FILE = Path("data/admin.json")
-
-_DEFAULT_USERNAME = "admin"
-_DEFAULT_PASSWORD = "admin1234"
+admin_users 테이블에서 첫 번째 super_admin 계정을 조회하여
+기존 AdminService.authenticate() 인터페이스를 유지한다.
+"""
+from src.core.supabase_client import get_supabase
 
 
 class AdminRepository:
-    """Singleton JSON repository for admin credentials."""
-
-    _instance: "AdminRepository | None" = None
-
-    def __new__(cls) -> "AdminRepository":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
     def __init__(self) -> None:
-        if self._initialized:
-            return
-        DATA_FILE.parent.mkdir(exist_ok=True)
-        if not DATA_FILE.exists():
-            self._save(
-                {
-                    "username": _DEFAULT_USERNAME,
-                    "hashed_password": hash_password(_DEFAULT_PASSWORD),
-                }
-            )
-        self._initialized = True
-
-    def _load(self) -> dict:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
-
-    def _save(self, data: dict) -> None:
-        DATA_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        self._db = get_supabase()
 
     def get_credentials(self) -> dict:
-        """Return stored admin credentials dict."""
-        return self._load()
+        """admin_users 테이블에서 첫 번째 super_admin 계정을 반환."""
+        r = (
+            self._db.table("admin_users")
+            .select("username, hashed_password")
+            .eq("role", "super_admin")
+            .order("id")
+            .limit(1)
+            .execute()
+        )
+        if r.data:
+            return r.data[0]
+        return {}

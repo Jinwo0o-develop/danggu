@@ -1,97 +1,63 @@
-"""
-AdminUserRepository — 다중 관리자 계정 저장소 (Singleton).
-
-BaseJsonRepository 상속으로 Singleton·_load·_save·_next_id 자동 확보.
-최초 실행 시 레거시 admin.json → admin_users.json 마이그레이션 지원.
-"""
-import json
+"""AdminUserRepository — 다중 관리자 계정 저장소 (Supabase)."""
 import logging
-from pathlib import Path
 
-from src.core.paths import DATA_DIR
-from src.core.repository import BaseJsonRepository
-
-LEGACY_FILE = DATA_DIR / "admin.json"
+from src.core.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
 
-class AdminUserRepository(BaseJsonRepository):
-    """Singleton JSON repository for multi-admin accounts with roles."""
-
-    @property
-    def file_path(self) -> Path:
-        return DATA_DIR / "admin_users.json"
-
-    def _write_default(self) -> None:
-        """레거시 마이그레이션 또는 빈 관리자 목록 초기화.
-
-        보안: 기본 계정을 생성하지 않습니다.
-        최초 관리자 계정은 ADMIN_REGISTER_KEY 를 사용해 /admin/register 에서 생성하십시오.
-        """
-        if LEGACY_FILE.exists():
-            try:
-                legacy = json.loads(LEGACY_FILE.read_text(encoding="utf-8"))
-                admin_users = [
-                    {
-                        "id": 1,
-                        "username": legacy.get("username", "admin"),
-                        "hashed_password": legacy["hashed_password"],
-                        "role": "super_admin",
-                    }
-                ]
-                self.file_path.write_text(
-                    json.dumps(admin_users, ensure_ascii=False, indent=2),
-                    encoding="utf-8",
-                )
-                logger.info("Migrated admin.json → admin_users.json (role=super_admin)")
-                return
-            except Exception as exc:
-                logger.warning("Migration failed: %s — starting with empty admin list", exc)
-
-        # 기본 계정 없이 빈 목록으로 시작 (ADMIN_REGISTER_KEY 로 첫 계정 생성)
-        self.file_path.write_text("[]", encoding="utf-8")
+class AdminUserRepository:
+    def __init__(self) -> None:
+        self._db = get_supabase()
 
     # ── 조회 ──────────────────────────────────────────────────────
 
     def get_by_username(self, username: str) -> dict | None:
-        return next((u for u in self._load() if u["username"] == username), None)
+        r = (
+            self._db.table("admin_users")
+            .select("*")
+            .eq("username", username)
+            .maybe_single()
+            .execute()
+        )
+        return r.data
 
     def get_by_id(self, admin_id: int) -> dict | None:
-        return next((u for u in self._load() if u["id"] == admin_id), None)
+        r = (
+            self._db.table("admin_users")
+            .select("*")
+            .eq("id", admin_id)
+            .maybe_single()
+            .execute()
+        )
+        return r.data
 
     def get_all(self) -> list[dict]:
-        return self._load()
+        r = self._db.table("admin_users").select("*").order("id").execute()
+        return r.data or []
 
     # ── 쓰기 ──────────────────────────────────────────────────────
 
     def create(self, username: str, hashed_password: str, role: str) -> dict:
-        users = self._load()
-        if any(u["username"] == username for u in users):
+        if self.get_by_username(username) is not None:
             raise ValueError(f"이미 존재하는 사용자명입니다: {username}")
-        new_user = {
-            "id": self._next_id(users),
+        payload = {
             "username": username,
             "hashed_password": hashed_password,
             "role": role,
         }
-        users.append(new_user)
-        self._save(users)
-        return new_user
+        r = self._db.table("admin_users").insert(payload).execute()
+        return r.data[0]
 
     def delete(self, admin_id: int) -> bool:
-        users = self._load()
-        filtered = [u for u in users if u["id"] != admin_id]
-        if len(filtered) == len(users):
-            return False
-        self._save(filtered)
-        return True
+        r = self._db.table("admin_users").delete().eq("id", admin_id).execute()
+        return bool(r.data)
 
     def update_role(self, admin_id: int, role: str) -> dict | None:
-        users = self._load()
-        for i, u in enumerate(users):
-            if u["id"] == admin_id:
-                users[i] = {**u, "role": role}
-                self._save(users)
-                return users[i]
-        return None
+        r = (
+            self._db.table("admin_users")
+            .update({"role": role})
+            .eq("id", admin_id)
+            .execute()
+        )
+        return r.data[0] if r.data else None
