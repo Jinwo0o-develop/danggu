@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원 DB — SELL IT Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#F26419;--dark:#0d0d0d;--surface:#161616;--border:rgba(255,255,255,0.08);--text:#e8e8e8;--sub:rgba(255,255,255,0.4);--green:#48C78E;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+  .topbar{height:52px;background:rgba(10,10,10,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 28px;position:sticky;top:0;z-index:100;}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--primary);letter-spacing:2px;text-decoration:none;}
+  .badge{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;}
+  .badge-admin{background:rgba(242,100,25,.15);color:var(--primary);border:1px solid rgba(242,100,25,.3);}
+  .badge-role{background:rgba(134,187,216,.15);color:#86BBD8;border:1px solid rgba(134,187,216,.3);}
+  .topbar-right{margin-left:auto;display:flex;gap:16px;align-items:center;}
+  .tl{font-size:13px;color:var(--sub);text-decoration:none;transition:color .2s;}
+  .tl:hover{color:var(--text);}
+  .page{max-width:1100px;margin:0 auto;padding:36px 24px 60px;}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:36px;}
+  .page-sub{font-size:14px;color:var(--sub);margin-top:4px;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .stat-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--primary);line-height:1;}
+  .stat-label{font-size:12px;color:var(--sub);font-family:'Montserrat',sans-serif;letter-spacing:1px;margin-top:4px;}
+  .search-bar{margin-bottom:16px;}
+  .search-input{width:100%;max-width:380px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:100px;padding:9px 20px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:rgba(242,100,25,.4);}
+  .search-input::placeholder{color:var(--sub);}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead{background:rgba(255,255,255,.03);}
+  th{padding:11px 16px;text-align:left;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border);}
+  td{padding:13px 16px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .id-cell{color:var(--sub);font-family:'Montserrat',sans-serif;font-size:12px;}
+  .email-cell{font-weight:500;}
+  .sub-cell{font-size:12px;color:var(--sub);}
+  .count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 8px;border-radius:100px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;}
+  .count-0{background:rgba(255,255,255,.06);color:var(--sub);}
+  .count-pos{background:rgba(242,100,25,.15);color:var(--primary);}
+  .btn-danger{padding:5px 12px;border-radius:100px;border:1px solid rgba(242,100,25,.3);background:transparent;color:rgba(242,100,25,.7);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+  .btn-danger:hover{background:rgba(242,100,25,.1);color:var(--primary);}
+  .notice{border-radius:10px;padding:12px 18px;font-size:14px;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+  .notice-ok{background:rgba(72,199,142,.1);border:1px solid rgba(72,199,142,.3);color:var(--green);}
+  .empty{text-align:center;padding:48px 20px;color:var(--sub);}
+  .empty-icon{font-size:36px;margin-bottom:12px;}
+  @media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr};}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/admin" class="topbar-logo">SELL IT</a>
+  <span class="badge badge-admin">ADMIN</span>
+  <span class="badge badge-role">{{ role_label }}</span>
+  <div class="topbar-right">
+    <a href="/admin" class="tl">대시보드</a>
+    {% if admin.role == 'super_admin' %}
+    <a href="/admin/admins" class="tl">관리자 계정</a>
+    <a href="/admin/commission" class="tl">수수료율</a>
+    {% endif %}
+    <a href="/admin/settings" class="tl">설정</a>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="tl" style="background:none;border:none;cursor:pointer;">로그아웃</button>
+    </form>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">회원 DB</h1>
+      <p class="page-sub">가입한 고객 목록을 조회하고 관리합니다.</p>
+    </div>
+  </div>
+
+  {% if request.query_params.get('saved') %}
+  <div class="notice notice-ok">✅ 처리되었습니다.</div>
+  {% endif %}
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">{{ customers | length }}</div>
+      <div class="stat-label">총 가입 회원</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green);">
+        {{ customers | selectattr('phone') | list | length }}
+      </div>
+      <div class="stat-label">연락처 인증 완료</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#86BBD8;">
+        {{ app_count | length }}
+      </div>
+      <div class="stat-label">신청 내역 있는 회원</div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <form method="get" action="/admin/customers">
+      <input type="text" class="search-input" name="q" value="{{ q }}"
+             placeholder="이름 · 이메일 · 연락처 검색...">
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    {% if customers %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>이메일</th>
+          <th>이름</th>
+          <th>연락처</th>
+          <th>가입일</th>
+          <th>신청</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="id-cell">{{ c.id }}</td>
+          <td class="email-cell">{{ c.email }}</td>
+          <td>{{ c.name }}</td>
+          <td class="sub-cell">{{ c.phone | mask_phone }}</td>
+          <td class="sub-cell">{{ c.created_at[:10] if c.created_at else '—' }}</td>
+          <td>
+            {% set cnt = app_count.get(c.id, 0) %}
+            <span class="count-badge {{ 'count-pos' if cnt > 0 else 'count-0' }}">{{ cnt }}</span>
+          </td>
+          <td>
+            {% if admin.role == 'super_admin' %}
+            <form method="post" action="/admin/customers/{{ c.id }}/delete"
+                  onsubmit="return confirm('{{ c.email }} 회원을 삭제하시겠습니까?')">
+              {{ csrf_input(request) | safe }}
+              <button type="submit" class="btn-danger">삭제</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">👥</div>
+      <p>{% if q %}검색 결과가 없습니다.{% else %}가입한 회원이 없습니다.{% endif %}</p>
+    </div>
+    {% endif %}
+  </div>
+
+</main>
+{% include 'admin/_shared.html' %}
+</body>
+</html>

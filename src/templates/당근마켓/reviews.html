@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이용후기 목록 — Give, We Sell.</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #F26419;
+    --secondary: #86BBD8;
+    --dark: #1a1a1a;
+    --light: #fafafa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--dark);
+    color: var(--light);
+    min-height: 100vh;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .cursor-follower {
+    width: 36px; height: 36px;
+    border: 2px solid var(--secondary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    opacity: 0.6;
+  }
+
+  /* Page */
+  .list-page {
+    position: relative;
+    z-index: 1;
+    padding: 88px 24px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .list-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .list-badge {
+    display: inline-block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--secondary);
+    text-transform: uppercase;
+    border: 1px solid rgba(134,187,216,0.4);
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .list-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(44px, 7vw, 80px);
+    line-height: 0.95;
+    color: var(--light);
+  }
+
+  .list-title span { color: var(--primary); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding: 20px 32px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--primary);
+  }
+
+  .stat-num.blue { color: var(--secondary); }
+
+  .stat-label {
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-top: 4px;
+  }
+
+  /* Empty */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 15px; font-weight: 300; }
+
+  /* Review cards */
+  .reviews-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .review-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .review-item:hover {
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .review-item.like-item { border-left: 3px solid rgba(72,199,142,0.45); }
+  .review-item.dislike-item { border-left: 3px solid rgba(242,100,25,0.45); }
+
+  .review-rating {
+    font-size: 28px;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .review-body { flex: 1; }
+
+  .review-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .review-tag {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .tag-like    { background: rgba(72,199,142,0.15); color: rgba(72,199,142,0.9); }
+  .tag-dislike { background: rgba(242,100,25,0.15); color: var(--primary); }
+
+  .review-id {
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .review-comment {
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.65;
+  }
+
+  .no-comment {
+    font-size: 13px;
+    color: rgba(255,255,255,0.2);
+    font-style: italic;
+  }
+
+  /* Write CTA */
+  .write-cta {
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .write-btn {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    border-radius: 100px;
+    text-decoration: none;
+    cursor: none;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .write-btn:hover {
+    background: #d9540f;
+    box-shadow: 0 8px 24px rgba(242,100,25,0.35);
+  }
+
+  @media (max-width: 600px) {
+    .stats-bar { gap: 24px; padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="follower"></div>
+
+{% include '당근마켓/_navbar.html' %}
+
+<main class="list-page">
+
+  <div class="list-header">
+    <div class="list-badge">Real Reviews</div>
+    <h1 class="list-title">이용 <span>후기</span></h1>
+  </div>
+
+  {% set likes    = reviews | selectattr('rating', 'equalto', 'like')    | list %}
+  {% set dislikes = reviews | selectattr('rating', 'equalto', 'dislike') | list %}
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">{{ reviews | length }}</div>
+      <div class="stat-label">전체 후기</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">{{ likes | length }}</div>
+      <div class="stat-label">👍 좋아요</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num blue">{{ dislikes | length }}</div>
+      <div class="stat-label">👎 싫어요</div>
+    </div>
+  </div>
+
+  {% if reviews %}
+  <div class="reviews-grid">
+    {% for r in reviews | reverse %}
+    <div class="review-item {{ 'like-item' if r.rating == 'like' else 'dislike-item' }}"
+         style="animation-delay: {{ loop.index0 * 0.06 }}s">
+      <div class="review-rating">{{ '👍' if r.rating == 'like' else '😢' }}</div>
+      <div class="review-body">
+        <div class="review-meta">
+          <span class="review-tag {{ 'tag-like' if r.rating == 'like' else 'tag-dislike' }}">
+            {{ '좋아요' if r.rating == 'like' else '싫어요' }}
+          </span>
+          <span class="review-id">#{{ r.id }}</span>
+        </div>
+        {% if r.comment %}
+        <p class="review-comment">{{ r.comment }}</p>
+        {% else %}
+        <p class="no-comment">후기 내용 없음</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">💬</div>
+    <p>아직 등록된 후기가 없습니다.<br>첫 번째 후기를 남겨보세요!</p>
+  </div>
+  {% endif %}
+
+  <div class="write-cta">
+    <a href="/danggn/review" class="write-btn">후기 작성하기 →</a>
+  </div>
+
+</main>
+
+<script>
+  // cursor
+  const cursor = document.getElementById('cursor');
+  const follower = document.getElementById('follower');
+  let mx=0,my=0,fx=0,fy=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cursor.style.left=mx-6+'px'; cursor.style.top=my-6+'px';
+  });
+  (function loop(){
+    fx+=(mx-fx-18)*0.12; fy+=(my-fy-18)*0.12;
+    follower.style.left=fx+'px'; follower.style.top=fy+'px';
+    requestAnimationFrame(loop);
+  })();
+
+  // background canvas (same as other pages)
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  const orbs = Array.from({length:8},()=>({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    vx:(Math.random()-0.5)*0.38, vy:(Math.random()-0.5)*0.38,
+    r:160+Math.random()*220, phase:Math.random()*Math.PI*2,
+    speed:0.003+Math.random()*0.004, orange:Math.random()>0.45,
+  }));
+  function newEmber(b){ return {
+    x:Math.random()*innerWidth, y:b?innerHeight+8:Math.random()*innerHeight,
+    vx:(Math.random()-0.5)*0.45, vy:-(0.35+Math.random()*0.85),
+    r:0.7+Math.random()*1.9, alpha:0.07+Math.random()*0.38,
+    wobble:Math.random()*Math.PI*2, ws:0.018+Math.random()*0.032,
+    orange:Math.random()>0.5,
+  };}
+  const embers = Array.from({length:75},()=>newEmber(false));
+  (function bgLoop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    orbs.forEach(o=>{
+      o.x+=o.vx; o.y+=o.vy; o.phase+=o.speed;
+      if(o.x<-o.r) o.x=canvas.width+o.r; if(o.x>canvas.width+o.r) o.x=-o.r;
+      if(o.y<-o.r) o.y=canvas.height+o.r; if(o.y>canvas.height+o.r) o.y=-o.r;
+      const a=0.032+Math.sin(o.phase)*0.02;
+      const g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0,o.orange?`rgba(242,100,25,${a})`:`rgba(134,187,216,${a})`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+    });
+    embers.forEach(e=>{
+      e.wobble+=e.ws; e.x+=e.vx+Math.sin(e.wobble)*0.28; e.y+=e.vy;
+      if(e.y<-8) Object.assign(e,newEmber(true));
+      ctx.fillStyle=e.orange?`rgba(242,100,25,${e.alpha})`:`rgba(134,187,216,${e.alpha})`;
+      ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(bgLoop);
+  })();
+</script>
+</body>
+</html>

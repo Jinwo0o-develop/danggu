@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 계정 관리 — SELL IT Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#F26419;--dark:#0d0d0d;--surface:#161616;--border:rgba(255,255,255,0.08);--text:#e8e8e8;--sub:rgba(255,255,255,0.4);--green:#48C78E;--yellow:#FFD166;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+  /* topbar */
+  .topbar{height:52px;background:rgba(10,10,10,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 28px;position:sticky;top:0;z-index:100;}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--primary);letter-spacing:2px;text-decoration:none;}
+  .badge{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;}
+  .badge-admin{background:rgba(242,100,25,.15);color:var(--primary);border:1px solid rgba(242,100,25,.3);}
+  .badge-role{background:rgba(134,187,216,.15);color:#86BBD8;border:1px solid rgba(134,187,216,.3);}
+  .topbar-right{margin-left:auto;display:flex;gap:16px;align-items:center;}
+  .tl{font-size:13px;color:var(--sub);text-decoration:none;transition:color .2s;}
+  .tl:hover{color:var(--text);}
+  /* layout */
+  .page{max-width:1000px;margin:0 auto;padding:36px 24px 60px;}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:36px;margin-bottom:4px;}
+  .page-sub{font-size:14px;color:var(--sub);margin-bottom:32px;}
+  /* notices */
+  .notice{border-radius:10px;padding:12px 18px;font-size:14px;margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+  .notice-ok{background:rgba(72,199,142,.1);border:1px solid rgba(72,199,142,.3);color:var(--green);}
+  .notice-err{background:rgba(242,100,25,.1);border:1px solid rgba(242,100,25,.3);color:var(--primary);}
+  /* grid */
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;}
+  /* card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:0;}
+  .card-header{padding:14px 20px;border-bottom:1px solid var(--border);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sub);display:flex;align-items:center;justify-content:space-between;}
+  .card-body{padding:20px;}
+  /* table */
+  table{width:100%;border-collapse:collapse;}
+  thead{background:rgba(255,255,255,.03);}
+  th{padding:10px 14px;text-align:left;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border);}
+  td{padding:13px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .id-cell{color:var(--sub);font-family:'Montserrat',sans-serif;font-size:12px;}
+  /* role pill */
+  .role-pill{display:inline-block;padding:3px 10px;border-radius:100px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .role-super_admin{background:rgba(242,100,25,.15);color:var(--primary);border:1px solid rgba(242,100,25,.3);}
+  .role-operator{background:rgba(134,187,216,.15);color:#86BBD8;border:1px solid rgba(134,187,216,.3);}
+  .role-settler{background:rgba(72,199,142,.15);color:var(--green);border:1px solid rgba(72,199,142,.3);}
+  /* form */
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:6px;font-family:'Montserrat',sans-serif;}
+  .form-input,.form-select{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+  .form-input:focus,.form-select:focus{border-color:rgba(242,100,25,.4);}
+  .form-select{cursor:pointer;}
+  .btn-primary{width:100%;background:var(--primary);color:#fff;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:13px;border-radius:100px;border:none;cursor:pointer;transition:background .2s;margin-top:4px;}
+  .btn-primary:hover{background:#d9540f;}
+  .btn-danger{padding:5px 12px;border-radius:100px;border:1px solid rgba(242,100,25,.3);background:transparent;color:rgba(242,100,25,.7);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+  .btn-danger:hover{background:rgba(242,100,25,.1);color:var(--primary);}
+  .self-badge{font-size:10px;color:var(--sub);font-family:'Montserrat',sans-serif;letter-spacing:0.5px;}
+  /* role change form inline */
+  .role-form{display:flex;gap:6px;align-items:center;}
+  .role-form select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;}
+  .btn-sm{padding:5px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--sub);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+  .btn-sm:hover{border-color:rgba(134,187,216,.5);color:#86BBD8;}
+  @media(max-width:768px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/admin" class="topbar-logo">SELL IT</a>
+  <span class="badge badge-admin">ADMIN</span>
+  <span class="badge badge-role">{{ role_label }}</span>
+  <div class="topbar-right">
+    <a href="/admin" class="tl">대시보드</a>
+    <a href="/admin/register-keys" class="tl">등록 키</a>
+    <a href="/admin/customers" class="tl">회원 DB</a>
+    <a href="/admin/commission" class="tl">수수료율</a>
+    <a href="/admin/settings" class="tl">설정</a>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="tl" style="background:none;border:none;cursor:pointer;">로그아웃</button>
+    </form>
+  </div>
+</header>
+
+<main class="page">
+  <h1 class="page-title">관리자 계정</h1>
+  <p class="page-sub">관리자 계정을 추가하고 역할을 설정합니다. (슈퍼관리자 전용)</p>
+
+  {% if saved %}
+  <div class="notice notice-ok">✅ 변경사항이 저장되었습니다.</div>
+  {% endif %}
+  {% if error %}
+  <div class="notice notice-err">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <div class="grid">
+
+    <!-- 계정 목록 -->
+    <div class="card">
+      <div class="card-header">
+        <span>등록된 관리자 ({{ admin_users | length }}명)</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>사용자명</th>
+            <th>역할</th>
+            <th>역할 변경</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in admin_users %}
+          <tr>
+            <td class="id-cell">{{ user.id }}</td>
+            <td>
+              {{ user.username }}
+              {% if user.id == admin.id %}
+              <span class="self-badge">(나)</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="role-pill role-{{ user.role }}">
+                {{ role_labels.get(user.role, user.role) }}
+              </span>
+            </td>
+            <td>
+              {% if user.id != admin.id %}
+              <form method="post" action="/admin/admins/{{ user.id }}/role" class="role-form">
+                {{ csrf_input(request) | safe }}
+                <select name="role">
+                  <option value="super_admin" {% if user.role == 'super_admin' %}selected{% endif %}>슈퍼관리자</option>
+                  <option value="operator"    {% if user.role == 'operator'    %}selected{% endif %}>운영자</option>
+                  <option value="settler"     {% if user.role == 'settler'     %}selected{% endif %}>정산담당</option>
+                </select>
+                <button type="submit" class="btn-sm">변경</button>
+              </form>
+              {% else %}
+              <span style="font-size:12px; color:var(--sub);">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.id != admin.id %}
+              <form method="post" action="/admin/admins/{{ user.id }}/delete"
+                    onsubmit="return confirm('{{ user.username }} 계정을 삭제하시겠습니까?')">
+                {{ csrf_input(request) | safe }}
+                <button type="submit" class="btn-danger">삭제</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 신규 계정 생성 폼 -->
+    <div class="card">
+      <div class="card-header">새 관리자 계정 추가</div>
+      <div class="card-body">
+        <form method="post" action="/admin/admins/create">
+          {{ csrf_input(request) | safe }}
+          <div class="form-group">
+            <label class="form-label" for="username">사용자명</label>
+            <input type="text" id="username" name="username" class="form-input"
+                   placeholder="영문/숫자" required minlength="3" pattern="[a-zA-Z0-9_]+">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password">초기 비밀번호</label>
+            <input type="password" id="password" name="password" class="form-input"
+                   placeholder="6자 이상" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="role">역할</label>
+            <select id="role" name="role" class="form-select">
+              <option value="operator">운영자 — 수거예정 전환 담당</option>
+              <option value="settler">정산담당 — 정산완료 전환 담당</option>
+              <option value="super_admin">슈퍼관리자 — 모든 권한</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary">계정 생성 →</button>
+        </form>
+
+        <!-- 역할 설명 -->
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+          <p style="font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--sub); margin-bottom:12px;">역할 권한</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="background:rgba(242,100,25,.07); border-radius:8px; padding:10px 14px;">
+              <p style="font-size:12px; font-weight:600; color:var(--primary); margin-bottom:2px;">슈퍼관리자</p>
+              <p style="font-size:12px; color:var(--sub);">모든 상태 전환 · 계정 관리 · 수수료 설정</p>
+            </div>
+            <div style="background:rgba(134,187,216,.07); border-radius:8px; padding:10px 14px;">
+              <p style="font-size:12px; font-weight:600; color:#86BBD8; margin-bottom:2px;">운영자</p>
+              <p style="font-size:12px; color:var(--sub);">접수됨 → 수거예정 · 취소 처리</p>
+            </div>
+            <div style="background:rgba(72,199,142,.07); border-radius:8px; padding:10px 14px;">
+              <p style="font-size:12px; font-weight:600; color:var(--green); margin-bottom:2px;">정산담당</p>
+              <p style="font-size:12px; color:var(--sub);">판매중 → 정산완료 · 취소 처리</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+{% include 'admin/_shared.html' %}
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 뭐 먹지?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 오늘 뭐 먹지?</h1>
+
+        <button
+            id="pick-btn"
+            hx-get="/api/random-menu"
+            hx-target="#result-box"
+            hx-swap="innerHTML"
+            hx-indicator="#loading">
+            오늘 뭐 먹지?
+        </button>
+
+        <div id="result-box">
+            <p id="loading" class="htmx-indicator">고르는 중...</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="action-row">
+            <button
+                class="action-btn add-btn"
+                hx-get="/api/menus/add-form"
+                hx-target="#panel"
+                hx-swap="innerHTML">
+                ＋ 메뉴 추가
+            </button>
+            <button
+                class="action-btn delete-btn"
+                hx-get="/api/menus/delete-list"
+                hx-target="#panel"
+                hx-swap="innerHTML">
+                － 메뉴 삭제
+            </button>
+        </div>
+
+        <div id="panel"></div>
+        <div id="toast"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 로그인 — SELL IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #F26419;
+    --dark: #0d0d0d;
+    --surface: #161616;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8e8e8;
+    --sub: rgba(255,255,255,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Noto Sans KR',sans-serif;
+    background:var(--dark); color:var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+  }
+
+  .login-box {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:48px 40px;
+    width:100%; max-width:400px;
+  }
+
+  .logo {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:32px; color:var(--primary);
+    letter-spacing:3px; text-align:center;
+    margin-bottom:4px;
+  }
+  .admin-label {
+    font-family:'Montserrat',sans-serif;
+    font-size:10px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color:var(--sub);
+    text-align:center; margin-bottom:36px;
+  }
+
+  .field { margin-bottom:18px; }
+  .field label {
+    display:block; font-size:12px; color:var(--sub);
+    margin-bottom:6px; letter-spacing:0.5px;
+  }
+  .field input {
+    width:100%; padding:11px 14px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);
+    border-radius:8px; color:var(--text);
+    font-family:'Noto Sans KR',sans-serif; font-size:14px;
+    outline:none; transition:border-color .2s;
+  }
+  .field input:focus { border-color:rgba(242,100,25,0.5); }
+
+  .error {
+    background:rgba(242,100,25,0.12);
+    border:1px solid rgba(242,100,25,0.3);
+    border-radius:8px; padding:10px 14px;
+    font-size:13px; color:#f89a6a;
+    margin-bottom:18px;
+  }
+
+  .btn-login {
+    width:100%; padding:13px;
+    background:var(--primary); color:#fff;
+    border:none; border-radius:8px;
+    font-family:'Montserrat',sans-serif;
+    font-size:14px; font-weight:700; letter-spacing:1px;
+    cursor:pointer; transition:opacity .2s;
+    margin-top:8px;
+  }
+  .btn-login:hover { opacity:0.88; }
+  .success {
+    background:rgba(72,199,142,0.12);
+    border:1px solid rgba(72,199,142,0.3);
+    border-radius:8px; padding:10px 14px;
+    font-size:13px; color:#48c78e;
+    margin-bottom:18px;
+  }
+  .register-link {
+    text-align:center; margin-top:20px;
+    font-size:13px; color:var(--sub);
+  }
+  .register-link a { color:var(--primary); text-decoration:none; }
+  .register-link a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="login-box">
+  <div class="logo">SELL IT</div>
+  <div class="admin-label">Admin Login</div>
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if request.query_params.get('registered') %}
+  <div class="success">계정이 생성되었습니다. 로그인해 주세요.</div>
+  {% endif %}
+
+  <form method="post" action="/admin/login">
+    {{ csrf_input(request) | safe }}
+    <div class="field">
+      <label for="username">아이디</label>
+      <input id="username" name="username" type="text" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label for="password">비밀번호</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn-login">로그인</button>
+  </form>
+  <div class="register-link"><a href="/admin/register">계정 등록</a></div>
+</div>
+
+</body>
+</html>

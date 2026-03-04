@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>신청 조회 — Give, We Sell.</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="/static/js/danggn-fx.js"></script>
+<style>
+  :root {
+    --primary: #F26419;
+    --secondary: #86BBD8;
+    --dark: #1a1a1a;
+    --light: #fafafa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--dark);
+    color: var(--light);
+    min-height: 100vh;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+  }
+  .cursor-follower {
+    width: 36px; height: 36px;
+    border: 2px solid var(--secondary);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    opacity: 0.6;
+  }
+
+  .lookup-page {
+    position: relative;
+    z-index: 1;
+    padding-top: 80px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 60px;
+  }
+
+  .lookup-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .lookup-badge {
+    display: inline-block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--secondary);
+    text-transform: uppercase;
+    border: 1px solid rgba(134,187,216,0.4);
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .lookup-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(40px, 7vw, 80px);
+    line-height: 0.95;
+    color: var(--light);
+  }
+  .lookup-title span { color: var(--primary); display: block; }
+
+  .lookup-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    margin-top: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Card */
+  .lookup-card {
+    background: rgba(20,20,20,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    padding: 36px 44px;
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+  }
+  .lookup-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(242,100,25,0.5), rgba(134,187,216,0.35), transparent);
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: none;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: rgba(242,100,25,0.15);
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 8px;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  input[type="tel"],
+  input[type="text"] {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--light);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    cursor: none;
+  }
+  input[type="tel"]:focus,
+  input[type="text"]:focus {
+    border-color: rgba(242,100,25,0.45);
+    background: rgba(255,255,255,0.07);
+    box-shadow: 0 0 0 3px rgba(242,100,25,0.08);
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 16px;
+    border-radius: 100px;
+    border: none;
+    cursor: none;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    margin-top: 16px;
+  }
+  .submit-btn:hover {
+    background: #d9540f;
+    box-shadow: 0 8px 28px rgba(242,100,25,0.35);
+  }
+  .submit-btn:active { transform: scale(0.98); }
+
+  /* Sim code box */
+  .sim-code-box {
+    background: rgba(134,187,216,0.08);
+    border: 1px solid rgba(134,187,216,0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .sim-code-label {
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--secondary);
+    margin-bottom: 8px;
+  }
+  .sim-code-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 10px;
+    color: var(--light);
+  }
+  .sim-code-note {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 6px;
+  }
+
+  .auth-banner {
+    background: rgba(72,199,142,0.08);
+    border: 1px solid rgba(72,199,142,0.25);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: rgba(100,220,160,0.9);
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .resend-link {
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    text-decoration: none;
+    cursor: none;
+  }
+  .resend-link:hover { color: var(--secondary); }
+
+  /* Error */
+  .error-box {
+    background: rgba(242,100,25,0.1);
+    border: 1px solid rgba(242,100,25,0.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255,140,80,0.9);
+    margin-bottom: 20px;
+  }
+
+  /* Results */
+  .results-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+
+  .result-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .result-card:hover {
+    border-color: rgba(242,100,25,0.4);
+    background: rgba(242,100,25,0.05);
+  }
+
+  .result-info { flex: 1; min-width: 0; }
+  .result-item {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--light);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .result-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  .result-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .s-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  .result-arrow {
+    color: rgba(255,255,255,0.25);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 560px) {
+    .lookup-card { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="follower"></div>
+
+{% include '당근마켓/_navbar.html' %}
+
+<main class="lookup-page">
+
+  <div class="lookup-header">
+    <div class="lookup-badge">Status Lookup</div>
+    <h1 class="lookup-title">
+      신청<br>
+      <span>조회하기</span>
+    </h1>
+    <p class="lookup-sub">전화번호, 식별코드 또는 인증코드로 신청 현황을 확인하세요.</p>
+  </div>
+
+  <div class="lookup-card">
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    {% set _active = active_tab if active_tab else ('phone' if not results else 'phone') %}
+
+    <div class="tab-bar">
+      <button class="tab-btn {% if _active == 'phone' %}active{% endif %}" data-tab="phone" type="button">📱 전화번호</button>
+      <button class="tab-btn {% if _active == 'code' %}active{% endif %}" data-tab="code" type="button">🔑 식별코드</button>
+      <button class="tab-btn {% if _active == 'auth' %}active{% endif %}" data-tab="auth" type="button">🔒 인증코드</button>
+    </div>
+
+    <!-- 전화번호 탭 -->
+    <div class="tab-panel {% if _active == 'phone' %}active{% endif %}" id="tab-phone">
+      <form method="post" action="/danggn/lookup">
+        <input type="hidden" name="method" value="phone">
+        <label for="phone_input">전화번호</label>
+        <input type="tel" id="phone_input" name="phone" value="010-"
+               inputmode="numeric" maxlength="13" autocomplete="tel"
+               placeholder="010-0000-0000">
+        <button type="submit" class="submit-btn">신청 목록 확인 →</button>
+      </form>
+
+      {% if results %}
+      <p class="results-title">조회 결과 {{ results | length }}건</p>
+      {% set status_colors = {
+        '접수됨':   {'color': '#86BBD8', 'bg': 'rgba(134,187,216,0.14)'},
+        '수거예정': {'color': '#FFD166', 'bg': 'rgba(255,209,102,0.14)'},
+        '판매중':   {'color': '#F26419', 'bg': 'rgba(242,100,25,0.14)'},
+        '정산완료': {'color': '#48C78E', 'bg': 'rgba(72,199,142,0.14)'},
+        '취소됨':   {'color': 'rgba(255,255,255,0.35)', 'bg': 'rgba(255,255,255,0.06)'},
+      } %}
+      {% for app in results %}
+      {% set sc = status_colors.get(app.status, status_colors['접수됨']) %}
+      <a href="/danggn/status/{{ app.id }}" class="result-card">
+        <div class="result-info">
+          <div class="result-item">{{ app.item_name }}</div>
+          <div class="result-meta">#{{ app.id }} · {{ app.listed_price }}</div>
+        </div>
+        <span class="result-status" style="background:{{ sc.bg }}; color:{{ sc.color }}">
+          <span class="s-dot" style="background:{{ sc.color }}"></span>
+          {{ app.status }}
+        </span>
+        <span class="result-arrow">→</span>
+      </a>
+      {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- 식별코드 탭 -->
+    <div class="tab-panel {% if _active == 'code' %}active{% endif %}" id="tab-code">
+      <form method="post" action="/danggn/lookup">
+        <input type="hidden" name="method" value="code">
+        <label for="code_input">식별코드</label>
+        <input type="text" id="code_input" name="code"
+               maxlength="6" autocomplete="off"
+               placeholder="예: A3F9K2"
+               style="text-transform:uppercase; letter-spacing:4px; font-family:'Montserrat',sans-serif;">
+        <button type="submit" class="submit-btn">신청 현황 확인 →</button>
+      </form>
+    </div>
+
+    <!-- 인증코드 탭 -->
+    <div class="tab-panel {% if _active == 'auth' %}active{% endif %}" id="tab-auth">
+
+      {% if auth_pending %}
+
+        <div class="auth-banner">📱 인증코드가 발송되었습니다</div>
+
+        {% if sim_code %}
+        <div class="sim-code-box">
+          <div class="sim-code-label">시뮬레이션 — 발송된 코드</div>
+          <div class="sim-code-value">{{ sim_code }}</div>
+          <div class="sim-code-note">실제 서비스에서는 SMS로 발송됩니다 · 유효시간 10분</div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="/danggn/auth-code/verify">
+          <input type="hidden" name="phone" value="{{ auth_phone }}">
+          <label for="otp_input">6자리 인증코드</label>
+          <input type="text" id="otp_input" name="code"
+                 maxlength="6" autocomplete="one-time-code"
+                 inputmode="numeric"
+                 placeholder="000000"
+                 style="letter-spacing:8px; font-family:'Montserrat',sans-serif; font-size:22px; text-align:center;">
+          <button type="submit" class="submit-btn">인증 후 목록 확인 →</button>
+        </form>
+
+        <a class="resend-link" href="#"
+           onclick="document.getElementById('resend-form').submit(); return false;">
+          ↺ 코드 다시 요청
+        </a>
+        <form id="resend-form" method="post" action="/danggn/auth-code/request" style="display:none;">
+          <input type="hidden" name="phone" value="{{ auth_phone }}">
+        </form>
+
+      {% else %}
+
+        <form method="post" action="/danggn/auth-code/request">
+          <label for="auth_phone_input">전화번호</label>
+          <input type="tel" id="auth_phone_input" name="phone" value="010-"
+                 inputmode="numeric" maxlength="13" autocomplete="tel"
+                 placeholder="010-0000-0000">
+          <button type="submit" class="submit-btn">인증코드 받기 →</button>
+        </form>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  DanggnFX.initCursor();
+  DanggnFX.createBgCanvas(document.getElementById('bgCanvas'));
+
+  // Tab switching
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + target).classList.add('active');
+    });
+  });
+
+  // Phone auto-format (shared helper)
+  function applyPhoneFormat(input) {
+    input.addEventListener('keydown', e => {
+      const passthrough = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab'];
+      if (passthrough.includes(e.key)) return;
+      if (e.ctrlKey || e.metaKey) return;
+      const pos = e.target.selectionStart;
+      const selEnd = e.target.selectionEnd;
+      if (e.key === 'Backspace' && pos <= 4 && pos === selEnd) { e.preventDefault(); return; }
+      if ((e.key === 'Backspace' || e.key === 'Delete') && selEnd <= 4) { e.preventDefault(); return; }
+      if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+    input.addEventListener('input', e => {
+      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+      const rest = digits.slice(3);
+      const allDigits = '010' + rest;
+      let formatted;
+      if (allDigits.length > 7) {
+        formatted = '010-' + allDigits.slice(3, 7) + '-' + allDigits.slice(7);
+      } else if (allDigits.length > 3) {
+        formatted = '010-' + allDigits.slice(3);
+      } else {
+        formatted = '010-';
+      }
+      e.target.value = formatted;
+    });
+  }
+
+  const phoneInput = document.getElementById('phone_input');
+  if (phoneInput) applyPhoneFormat(phoneInput);
+
+  const authPhoneInput = document.getElementById('auth_phone_input');
+  if (authPhoneInput) applyPhoneFormat(authPhoneInput);
+
+  // Code input: force uppercase
+  const codeInput = document.getElementById('code_input');
+  if (codeInput) {
+    codeInput.addEventListener('input', e => {
+      const pos = e.target.selectionStart;
+      e.target.value = e.target.value.toUpperCase();
+      e.target.setSelectionRange(pos, pos);
+    });
+  }
+
+  // OTP input: digits only
+  const otpInput = document.getElementById('otp_input');
+  if (otpInput) {
+    otpInput.addEventListener('keydown', e => {
+      const passthrough = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab', 'Home', 'End'];
+      if (passthrough.includes(e.key) || e.ctrlKey || e.metaKey) return;
+      if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수수료율 설정 — SELL IT Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --primary:#F26419; --dark:#0d0d0d; --surface:#161616; --border:rgba(255,255,255,0.08); --text:#e8e8e8; --sub:rgba(255,255,255,0.4); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--dark); color:var(--text); min-height:100vh; }
+  .topbar { height:52px; background:rgba(10,10,10,.95); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; padding:0 28px; position:sticky; top:0; z-index:100; }
+  .topbar-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--primary); letter-spacing:2px; text-decoration:none; }
+  .role-badge { font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; background:rgba(242,100,25,.15); color:var(--primary); border:1px solid rgba(242,100,25,.3); padding:3px 10px; border-radius:100px; }
+  .topbar-link { font-size:13px; color:var(--sub); text-decoration:none; transition:color .2s; }
+  .topbar-link:hover { color:var(--text); }
+  .topbar-right { margin-left:auto; display:flex; gap:16px; align-items:center; }
+  .page { max-width:640px; margin:0 auto; padding:40px 24px 60px; }
+  .page-title { font-family:'Bebas Neue',sans-serif; font-size:36px; margin-bottom:8px; }
+  .page-sub { font-size:14px; color:var(--sub); margin-bottom:36px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px; }
+  .card-header { padding:14px 20px; border-bottom:1px solid var(--border); font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--sub); }
+  .card-body { padding:24px; }
+  .rate-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .rate-row:last-child { margin-bottom:0; }
+  .rate-label { font-size:15px; min-width:80px; }
+  .rate-input-wrap { display:flex; align-items:center; gap:8px; flex:1; }
+  .rate-input { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'Montserrat',sans-serif; font-size:14px; width:100px; outline:none; transition:border-color .2s; }
+  .rate-input:focus { border-color:rgba(242,100,25,.4); }
+  .rate-unit { font-size:13px; color:var(--sub); }
+  .rate-display { font-size:12px; color:var(--sub); min-width:52px; text-align:right; }
+  .submit-btn { background:var(--primary); color:#fff; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:14px 32px; border-radius:100px; border:none; cursor:pointer; transition:background .2s; }
+  .submit-btn:hover { background:#d9540f; }
+  .saved-notice { background:rgba(72,199,142,.12); border:1px solid rgba(72,199,142,.3); border-radius:10px; padding:12px 16px; font-size:14px; color:#48C78E; margin-bottom:24px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a href="/admin" class="topbar-logo">SELL IT</a>
+  <span class="role-badge">{{ role_label }}</span>
+  <div class="topbar-right">
+    <a href="/admin" class="topbar-link">← 대시보드</a>
+    <a href="/admin/settings" class="topbar-link">설정</a>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="topbar-link" style="background:none;border:none;cursor:pointer;">로그아웃</button>
+    </form>
+  </div>
+</header>
+
+<main class="page">
+  <h1 class="page-title">수수료율 설정</h1>
+  <p class="page-sub">카테고리별 수수료율을 설정합니다. 다음 정산부터 적용됩니다.</p>
+
+  {% if request.query_params.get('saved') %}
+  <div class="saved-notice">✅ 수수료율이 저장되었습니다.</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">카테고리별 수수료율</div>
+    <div class="card-body">
+      <form method="post" action="/admin/commission">
+        {{ csrf_input(request) | safe }}
+        {% for category, rate in rates.items() %}
+        <div class="rate-row">
+          <span class="rate-label">{{ category }}</span>
+          <div class="rate-input-wrap">
+            <input type="number" class="rate-input" name="rate_{{ category }}"
+                   value="{{ (rate * 100) | round(1) }}" min="0" max="100" step="0.1"
+                   oninput="updateDisplay(this)">
+            <span class="rate-unit">%</span>
+            <span class="rate-display" id="disp_{{ loop.index }}">
+              → {{ (rate * 100) | round(1) }}%
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+        <div style="margin-top:24px;">
+          <button type="submit" class="submit-btn">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Convert % input → decimal before submit
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const inputs = this.querySelectorAll('input[type="number"]');
+    inputs.forEach(inp => {
+      inp.value = (parseFloat(inp.value) / 100).toFixed(4);
+    });
+  });
+
+  function updateDisplay(inp) {
+    // Not needed since we convert on submit, but nice UX
+  }
+</script>
+{% include 'admin/_shared.html' %}
+</body>
+</html>

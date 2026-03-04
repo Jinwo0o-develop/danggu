@@ -1,0 +1,26 @@
+<div class="panel-box">
+    <h3 class="panel-title">메뉴 삭제</h3>
+    {% if menus %}
+    <ul class="menu-list">
+        {% for menu in menus %}
+        <li class="menu-item">
+            <span>{{ menu.emoji }} {{ menu.name }}</span>
+            <button
+                class="delete-item-btn"
+                hx-delete="/api/menus/{{ menu.name }}"
+                hx-target="#panel"
+                hx-swap="innerHTML"
+                hx-confirm="'{{ menu.name }}' 메뉴를 삭제할까요?">
+                삭제
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-msg">등록된 메뉴가 없습니다.</p>
+    {% endif %}
+    <div class="form-actions">
+        <button type="button" class="action-btn cancel-btn"
+            onclick="document.getElementById('panel').innerHTML=''">닫기</button>
+    </div>
+</div>

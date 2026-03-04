@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관리자 대시보드 — SELL IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #F26419;
+    --dark: #0d0d0d;
+    --surface: #161616;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8e8e8;
+    --sub: rgba(255,255,255,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--dark); color:var(--text); min-height:100vh; }
+
+  /* ── Top bar ── */
+  .topbar {
+    height:52px; background:rgba(10,10,10,0.95);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:16px;
+    padding:0 28px; position:sticky; top:0; z-index:100;
+  }
+  .topbar-logo {
+    font-family:'Bebas Neue',sans-serif; font-size:22px;
+    color:var(--primary); letter-spacing:2px;
+  }
+  .admin-badge {
+    font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    background:rgba(242,100,25,0.15); color:var(--primary);
+    border:1px solid rgba(242,100,25,0.3);
+    padding:3px 10px; border-radius:100px;
+  }
+  .topbar-link {
+    font-size:13px; color:var(--sub);
+    text-decoration:none; transition:color .2s;
+  }
+  .topbar-link:hover { color:var(--text); }
+  .topbar-right { margin-left:auto; display:flex; gap:16px; align-items:center; }
+  .role-badge {
+    font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    background:rgba(134,187,216,0.15); color:#86BBD8;
+    border:1px solid rgba(134,187,216,0.3);
+    padding:3px 10px; border-radius:100px;
+  }
+  .auto-cancel-notice {
+    background:rgba(255,209,102,0.1); border:1px solid rgba(255,209,102,0.3);
+    border-radius:10px; padding:12px 18px; margin-bottom:20px;
+    font-size:14px; color:#FFD166; display:flex; align-items:center; gap:8px;
+  }
+
+  /* ── Layout ── */
+  .page { max-width:1100px; margin:0 auto; padding:32px 24px 60px; }
+
+  .page-title {
+    font-family:'Bebas Neue',sans-serif; font-size:40px;
+    color:var(--text); margin-bottom:28px; letter-spacing:1px;
+  }
+  .page-title span { color:var(--primary); }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display:grid; grid-template-columns:repeat(5,1fr); gap:12px;
+    margin-bottom:32px;
+  }
+  .stat-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:18px 16px; text-align:center;
+    transition:border-color .2s;
+    text-decoration:none; display:block;
+  }
+  .stat-card:hover { border-color:rgba(255,255,255,0.18); }
+  .stat-card.active { border-color:var(--primary); }
+  .stat-emoji { font-size:22px; margin-bottom:8px; }
+  .stat-num {
+    font-family:'Bebas Neue',sans-serif; font-size:32px;
+    line-height:1; margin-bottom:4px;
+  }
+  .stat-label { font-size:12px; color:var(--sub); font-family:'Montserrat',sans-serif; letter-spacing:1px; }
+
+  /* ── Search bar ── */
+  .search-bar {
+    margin-bottom:16px;
+  }
+  .search-input {
+    width:100%; max-width:400px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border); border-radius:100px;
+    padding:9px 20px; color:var(--text);
+    font-family:'Noto Sans KR',sans-serif; font-size:14px;
+    outline:none; transition:border-color .2s;
+  }
+  .search-input:focus { border-color:rgba(242,100,25,0.4); }
+  .search-input::placeholder { color:var(--sub); }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:20px; flex-wrap:wrap;
+  }
+  .filter-label { font-size:12px; color:var(--sub); font-family:'Montserrat',sans-serif; letter-spacing:1px; margin-right:4px; }
+  .filter-btn {
+    font-size:12px; padding:6px 14px; border-radius:100px;
+    border:1px solid var(--border); background:transparent;
+    color:var(--sub); cursor:pointer; text-decoration:none;
+    transition:all .18s;
+  }
+  .filter-btn:hover { border-color:rgba(255,255,255,0.2); color:var(--text); }
+  .filter-btn.active { background:rgba(242,100,25,0.12); border-color:rgba(242,100,25,0.5); color:var(--primary); }
+
+  /* ── Table ── */
+  .table-wrap {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; overflow:hidden;
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead { background:rgba(255,255,255,0.03); }
+  th {
+    padding:12px 16px; text-align:left;
+    font-family:'Montserrat',sans-serif; font-size:10px; font-weight:700;
+    letter-spacing:1.5px; text-transform:uppercase; color:var(--sub);
+    border-bottom:1px solid var(--border);
+  }
+  td { padding:14px 16px; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+
+  .id-cell { color:var(--sub); font-family:'Montserrat',sans-serif; font-size:12px; }
+  .item-cell { font-weight:500; }
+  .price-cell { font-size:12px; color:var(--sub); }
+
+  /* Status badge */
+  .status-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:4px 12px; border-radius:100px;
+    font-size:12px; font-weight:500; white-space:nowrap;
+  }
+  .status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+  /* Detail button */
+  .detail-btn {
+    font-family:'Montserrat',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase;
+    padding:6px 16px; border-radius:100px;
+    border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.55);
+    text-decoration:none; transition:all .18s;
+  }
+  .detail-btn:hover { border-color:var(--primary); color:var(--primary); }
+
+  /* Empty */
+  .empty { text-align:center; padding:48px 20px; color:var(--sub); }
+  .empty-icon { font-size:36px; margin-bottom:12px; }
+
+  @media(max-width:768px){
+    .stats-row { grid-template-columns:repeat(3,1fr); }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(6), td:nth-child(6) { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/admin" class="topbar-logo" style="text-decoration:none;">SELL IT</a>
+  <span class="admin-badge">ADMIN</span>
+  {% if role_label %}<span class="role-badge">{{ role_label }}</span>{% endif %}
+  <div class="topbar-right">
+    <a href="/admin/customers" class="topbar-link">회원 DB</a>
+    <a href="/admin/register-keys" class="topbar-link">등록 키</a>
+    {% if admin and admin.role == 'super_admin' %}
+    <a href="/admin/admins" class="topbar-link">관리자 계정</a>
+    <a href="/admin/commission" class="topbar-link">수수료율</a>
+    {% endif %}
+    <a href="/admin/settings" class="topbar-link">설정</a>
+    <a href="/danggn" class="topbar-link">← 사이트로</a>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="topbar-link" style="background:none;border:none;cursor:pointer;">로그아웃</button>
+    </form>
+  </div>
+</header>
+
+<main class="page">
+  <h1 class="page-title">신청 <span>목록</span></h1>
+
+  {% if auto_cancelled and auto_cancelled > 0 %}
+  <div class="auto-cancel-notice">
+    ⚡ 자동 취소: 오래된 접수됨 신청 <strong>{{ auto_cancelled }}건</strong>이 자동으로 취소되었습니다.
+  </div>
+  {% endif %}
+
+  {% set total      = applications | length %}
+  {% set cnt = namespace() %}
+
+  <!-- Stats row (전체 건수 기준, filter 없이) -->
+  <div class="stats-row">
+    {% for st_val, meta in status_meta.items() %}
+    <a href="/admin?status_filter={{ st_val }}"
+       class="stat-card {% if status_filter == st_val %}active{% endif %}">
+      <div class="stat-emoji">{{ meta.emoji }}</div>
+      <div class="stat-num" style="color:{{ meta.color }}">
+        {{ applications | selectattr('status', 'equalto', st_val) | list | length
+           if not status_filter else
+           applications | list | length if status_filter == st_val else
+           '-' }}
+      </div>
+      <div class="stat-label">{{ st_val }}</div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-bar">
+    <form method="get" action="/admin">
+      {% if status_filter %}
+      <input type="hidden" name="status_filter" value="{{ status_filter }}">
+      {% endif %}
+      <input type="text" class="search-input" name="q" value="{{ q }}"
+             placeholder="이름 · 연락처 · 물품명 · 식별코드 검색...">
+    </form>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">FILTER</span>
+    <a href="/admin" class="filter-btn {% if not status_filter %}active{% endif %}">전체</a>
+    {% for st_val, meta in status_meta.items() %}
+    <a href="/admin?status_filter={{ st_val }}"
+       class="filter-btn {% if status_filter == st_val %}active{% endif %}">
+      {{ meta.emoji }} {{ st_val }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    {% if applications %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>물품명</th>
+          <th>이름</th>
+          <th>식별코드</th>
+          <th>연락처</th>
+          <th>조건</th>
+          <th>상태</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+        {% set meta = status_meta.get(app.status, status_meta['접수됨']) %}
+        <tr>
+          <td class="id-cell">{{ app.id }}</td>
+          <td class="item-cell">{{ app.item_name }}</td>
+          <td>{{ app.name }}</td>
+          <td class="id-cell" style="letter-spacing:1.5px; font-size:11px;">{{ app.lookup_code }}</td>
+          <td>{{ app.phone | mask_phone }}</td>
+          <td class="price-cell">{{ app.listed_price }}</td>
+          <td>
+            <span class="status-badge"
+                  style="background:{{ meta.bg }}; color:{{ meta.color }}">
+              <span class="status-dot" style="background:{{ meta.color }}"></span>
+              {{ app.status }}
+            </span>
+          </td>
+          <td>
+            <a href="/admin/applications/{{ app.id }}" class="detail-btn">상세 →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">📭</div>
+      <p>해당 조건의 신청이 없습니다.</p>
+    </div>
+    {% endif %}
+  </div>
+</main>
+{% include 'admin/_shared.html' %}
+</body>
+</html>

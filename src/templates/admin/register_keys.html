@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>등록 키 관리 — SELL IT Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#F26419;--dark:#0d0d0d;--surface:#161616;--border:rgba(255,255,255,0.08);--text:#e8e8e8;--sub:rgba(255,255,255,0.4);--green:#48C78E;--yellow:#FFD166;--red:rgba(242,100,25,1);}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+  .topbar{height:52px;background:rgba(10,10,10,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 28px;position:sticky;top:0;z-index:100;}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--primary);letter-spacing:2px;text-decoration:none;}
+  .badge{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;}
+  .badge-admin{background:rgba(242,100,25,.15);color:var(--primary);border:1px solid rgba(242,100,25,.3);}
+  .badge-role{background:rgba(134,187,216,.15);color:#86BBD8;border:1px solid rgba(134,187,216,.3);}
+  .topbar-right{margin-left:auto;display:flex;gap:16px;align-items:center;}
+  .tl{font-size:13px;color:var(--sub);text-decoration:none;transition:color .2s;}
+  .tl:hover{color:var(--text);}
+  .tl.active{color:var(--primary);}
+
+  .page{max-width:900px;margin:0 auto;padding:36px 24px 60px;}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:36px;}
+  .page-sub{font-size:14px;color:var(--sub);margin-top:4px;}
+
+  .notice{border-radius:10px;padding:12px 18px;font-size:14px;margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+  .notice-ok{background:rgba(72,199,142,.1);border:1px solid rgba(72,199,142,.3);color:var(--green);}
+  .notice-err{background:rgba(242,100,25,.1);border:1px solid rgba(242,100,25,.3);color:var(--primary);}
+
+  .btn-generate{background:var(--primary);color:#fff;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:11px 22px;border-radius:100px;border:none;cursor:pointer;transition:background .2s;white-space:nowrap;}
+  .btn-generate:hover{background:#d9540f;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .card-header{padding:14px 20px;border-bottom:1px solid var(--border);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sub);}
+
+  table{width:100%;border-collapse:collapse;}
+  thead{background:rgba(255,255,255,.03);}
+  th{padding:10px 14px;text-align:left;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border);}
+  td{padding:13px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+
+  .key-value{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--text);}
+  .key-value.used{color:var(--sub);text-decoration:line-through;}
+  .key-value.revoked{color:var(--sub);text-decoration:line-through;}
+
+  .status-pill{display:inline-block;padding:3px 10px;border-radius:100px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+  .status-active{background:rgba(72,199,142,.15);color:var(--green);border:1px solid rgba(72,199,142,.3);}
+  .status-used{background:rgba(255,255,255,.07);color:var(--sub);border:1px solid rgba(255,255,255,.1);}
+  .status-revoked{background:rgba(242,100,25,.1);color:rgba(242,100,25,.6);border:1px solid rgba(242,100,25,.2);}
+
+  .meta{font-size:12px;color:var(--sub);}
+
+  .btn-revoke{padding:5px 12px;border-radius:100px;border:1px solid rgba(242,100,25,.3);background:transparent;color:rgba(242,100,25,.7);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+  .btn-revoke:hover{background:rgba(242,100,25,.1);color:var(--primary);}
+
+  .empty{padding:48px 20px;text-align:center;color:var(--sub);font-size:14px;}
+
+  .copy-btn{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--sub);font-family:'Montserrat',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .18s;margin-left:8px;}
+  .copy-btn:hover{background:rgba(255,255,255,.12);color:var(--text);}
+
+  @media(max-width:640px){.key-value{font-size:11px;letter-spacing:1px;} th,td{padding:10px 8px;}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/admin" class="topbar-logo">SELL IT</a>
+  <span class="badge badge-admin">ADMIN</span>
+  <span class="badge badge-role">{{ role_label }}</span>
+  <div class="topbar-right">
+    <a href="/admin" class="tl">대시보드</a>
+    <a href="/admin/register-keys" class="tl active">등록 키</a>
+    <a href="/admin/admins" class="tl">계정 관리</a>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="tl" style="background:none;border:none;cursor:pointer;">로그아웃</button>
+    </form>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">등록 키 관리</h1>
+      <p class="page-sub">일회성 등록 키를 생성하여 신규 관리자 계정 가입에 사용합니다.</p>
+    </div>
+    <form method="post" action="/admin/register-keys/generate">
+      {{ csrf_input(request) | safe }}
+      <button type="submit" class="btn-generate">+ 새 키 생성</button>
+    </form>
+  </div>
+
+  {% if saved %}
+  <div class="notice notice-ok">✅ 저장되었습니다.</div>
+  {% endif %}
+  {% if error %}
+  <div class="notice notice-err">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">등록 키 목록 ({{ keys | length }}개)</div>
+    {% if keys %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>키</th>
+          <th>상태</th>
+          <th>생성자</th>
+          <th>생성일시</th>
+          <th>사용자 / 사용일시</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for k in keys %}
+        <tr>
+          <td class="meta">{{ k.id }}</td>
+          <td>
+            <span class="key-value {% if k.used %}used{% elif k.revoked %}revoked{% endif %}">
+              {{ k.key }}
+            </span>
+            {% if not k.used and not k.revoked %}
+            <button class="copy-btn" onclick="copyKey('{{ k.key }}', this)">복사</button>
+            {% endif %}
+          </td>
+          <td>
+            {% if k.used %}
+            <span class="status-pill status-used">사용됨</span>
+            {% elif k.revoked %}
+            <span class="status-pill status-revoked">폐지됨</span>
+            {% else %}
+            <span class="status-pill status-active">활성</span>
+            {% endif %}
+          </td>
+          <td class="meta">{{ k.created_by }}</td>
+          <td class="meta">{{ k.created_at }}</td>
+          <td class="meta">
+            {% if k.used %}
+              <span>{{ k.used_by }}</span><br>
+              <span>{{ k.used_at }}</span>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            {% if not k.used and not k.revoked %}
+            <form method="post" action="/admin/register-keys/{{ k.id }}/revoke"
+                  onsubmit="return confirm('이 키를 폐지하시겠습니까?')">
+              {{ csrf_input(request) | safe }}
+              <button type="submit" class="btn-revoke">폐지</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">생성된 등록 키가 없습니다.<br>위의 <strong>+ 새 키 생성</strong> 버튼으로 키를 만들어주세요.</div>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+function copyKey(key, btn) {
+  navigator.clipboard.writeText(key).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+</script>
+{% include 'admin/_shared.html' %}
+</body>
+</html>
