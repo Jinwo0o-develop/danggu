@@ -11,7 +11,9 @@ from pathlib import Path
 
 from fastapi import UploadFile
 
-MEDIA_DIR = Path("data/media")
+from src.core.paths import DATA_DIR
+
+MEDIA_DIR = DATA_DIR / "media"
 ALLOWED_MIME_PREFIXES = ("image/", "video/")
 
 

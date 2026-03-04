@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -15,6 +16,9 @@ from src.api.v1.router import router as api_router
 from src.config import settings
 from src.core.exceptions import NotAuthenticatedException
 from src.templates_setup import templates
+
+# Vercel은 엣지에서 HTTPS를 처리하므로 앱 레벨 리다이렉트 불필요
+IS_VERCEL = bool(os.getenv("VERCEL"))
 
 
 class HSTSMiddleware:
@@ -55,7 +59,9 @@ app.add_exception_handler(
 
 if settings.is_production:
     app.add_middleware(HSTSMiddleware)
-    app.add_middleware(HTTPSRedirectMiddleware)
+    if not IS_VERCEL:
+        # Vercel은 엣지 레벨에서 HTTPS 강제 → 앱 레벨 리다이렉트 추가 시 무한루프 발생
+        app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
@@ -85,9 +91,12 @@ PAI_CHAT_DIST = BASE_DIR.parent / "PAI_CHAT" / "dist"
 
 
 @app.get("/PAI")
-async def pai_chat_index() -> FileResponse:
+async def pai_chat_index() -> FileResponse | RedirectResponse:
     """슬래시 없는 /PAI 경로에서 직접 index.html을 반환 (리다이렉트 방지)."""
+    if not PAI_CHAT_DIST.exists():
+        return RedirectResponse(url="/")
     return FileResponse(PAI_CHAT_DIST / "index.html")
 
 
-app.mount("/PAI", StaticFiles(directory=PAI_CHAT_DIST, html=True), name="pai-chat")
+if PAI_CHAT_DIST.exists():
+    app.mount("/PAI", StaticFiles(directory=PAI_CHAT_DIST, html=True), name="pai-chat")

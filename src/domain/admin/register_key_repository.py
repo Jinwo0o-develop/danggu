@@ -4,7 +4,9 @@ import string
 from datetime import datetime
 from pathlib import Path
 
-DATA_FILE = Path("data/admin_register_keys.json")
+from src.core.paths import DATA_DIR
+
+DATA_FILE = DATA_DIR / "admin_register_keys.json"
 
 
 class RegisterKeyRepository:

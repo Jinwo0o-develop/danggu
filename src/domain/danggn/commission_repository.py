@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-DATA_FILE = Path("data/danggn_commission_rates.json")
+from src.core.paths import DATA_DIR
+
+DATA_FILE = DATA_DIR / "danggn_commission_rates.json"
 
 DEFAULT_RATES: dict[str, float] = {
     "전자제품": 0.20,

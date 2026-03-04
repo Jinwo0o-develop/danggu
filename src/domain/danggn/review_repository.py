@@ -5,6 +5,7 @@ BaseJsonRepository 상속으로 Singleton·_load·_save·_next_id 자동 확보.
 """
 from pathlib import Path
 
+from src.core.paths import DATA_DIR
 from src.core.repository import BaseJsonRepository
 from src.domain.danggn.schemas import ReviewCreate
 
@@ -14,7 +15,7 @@ class ReviewRepository(BaseJsonRepository):
 
     @property
     def file_path(self) -> Path:
-        return Path("data/danggn_reviews.json")
+        return DATA_DIR / "danggn_reviews.json"
 
     def get_all(self) -> list[dict]:
         return self._load()

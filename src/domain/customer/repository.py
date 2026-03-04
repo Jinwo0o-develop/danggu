@@ -6,6 +6,7 @@ BaseJsonRepository 상속으로 Singleton·_load·_save·_next_id 자동 확보.
 from datetime import datetime
 from pathlib import Path
 
+from src.core.paths import DATA_DIR
 from src.core.repository import BaseJsonRepository
 from src.core.security import hash_password
 from src.domain.customer.schemas import CustomerCreate
@@ -16,7 +17,7 @@ class CustomerRepository(BaseJsonRepository):
 
     @property
     def file_path(self) -> Path:
-        return Path("data/customers.json")
+        return DATA_DIR / "customers.json"
 
     # ── 조회 ──────────────────────────────────────────────────────
 

@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-DATA_FILE = Path("data/danggn_settings.json")
+from src.core.paths import DATA_DIR
+
+DATA_FILE = DATA_DIR / "danggn_settings.json"
 
 DEFAULT_SETTINGS: dict = {"auto_cancel_days": 7}
 

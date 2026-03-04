@@ -8,10 +8,10 @@ import json
 import logging
 from pathlib import Path
 
+from src.core.paths import DATA_DIR
 from src.core.repository import BaseJsonRepository
-from src.core.security import hash_password
 
-LEGACY_FILE = Path("data/admin.json")
+LEGACY_FILE = DATA_DIR / "admin.json"
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +21,14 @@ class AdminUserRepository(BaseJsonRepository):
 
     @property
     def file_path(self) -> Path:
-        return Path("data/admin_users.json")
+        return DATA_DIR / "admin_users.json"
 
     def _write_default(self) -> None:
-        """레거시 마이그레이션 또는 기본 관리자 계정 생성."""
+        """레거시 마이그레이션 또는 빈 관리자 목록 초기화.
+
+        보안: 기본 계정을 생성하지 않습니다.
+        최초 관리자 계정은 ADMIN_REGISTER_KEY 를 사용해 /admin/register 에서 생성하십시오.
+        """
         if LEGACY_FILE.exists():
             try:
                 legacy = json.loads(LEGACY_FILE.read_text(encoding="utf-8"))
@@ -43,21 +47,10 @@ class AdminUserRepository(BaseJsonRepository):
                 logger.info("Migrated admin.json → admin_users.json (role=super_admin)")
                 return
             except Exception as exc:
-                logger.warning("Migration failed: %s — creating default admin", exc)
+                logger.warning("Migration failed: %s — starting with empty admin list", exc)
 
-        # 기본 관리자 계정
-        admin_users = [
-            {
-                "id": 1,
-                "username": "admin",
-                "hashed_password": hash_password("admin1234"),
-                "role": "super_admin",
-            }
-        ]
-        self.file_path.write_text(
-            json.dumps(admin_users, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        # 기본 계정 없이 빈 목록으로 시작 (ADMIN_REGISTER_KEY 로 첫 계정 생성)
+        self.file_path.write_text("[]", encoding="utf-8")
 
     # ── 조회 ──────────────────────────────────────────────────────
 

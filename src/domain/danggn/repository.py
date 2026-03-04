@@ -8,6 +8,7 @@ import secrets
 from datetime import datetime
 from pathlib import Path
 
+from src.core.paths import DATA_DIR
 from src.core.repository import BaseJsonRepository
 from src.domain.danggn.schemas import ApplicationCreate
 
@@ -17,7 +18,7 @@ class DanggnApplicationRepository(BaseJsonRepository):
 
     @property
     def file_path(self) -> Path:
-        return Path("data/danggn_applications.json")
+        return DATA_DIR / "danggn_applications.json"
 
     # ── lookup_code 관리 ──────────────────────────────────────────
 

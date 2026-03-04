@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-DATA_FILE = Path("data/menus.json")
+from src.core.paths import DATA_DIR
+
+DATA_FILE = DATA_DIR / "menus.json"
 
 
 class MenuRepository:

@@ -9,7 +9,9 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-DATA_FILE = Path("data/danggn_auth_codes.json")
+from src.core.paths import DATA_DIR
+
+DATA_FILE = DATA_DIR / "danggn_auth_codes.json"
 TTL = 600  # seconds (10분)
 
 

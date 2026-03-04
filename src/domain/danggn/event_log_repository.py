@@ -6,6 +6,7 @@ BaseJsonRepository 상속으로 Singleton·_load·_save 자동 확보.
 """
 from pathlib import Path
 
+from src.core.paths import DATA_DIR
 from src.core.repository import BaseJsonRepository
 from src.domain.danggn.state import StatusChangedEvent, StatusObserver
 
@@ -15,7 +16,7 @@ class EventLogRepository(BaseJsonRepository, StatusObserver):
 
     @property
     def file_path(self) -> Path:
-        return Path("data/danggn_event_logs.json")
+        return DATA_DIR / "danggn_event_logs.json"
 
     # ── Observer 인터페이스 ────────────────────────────────────────
 
