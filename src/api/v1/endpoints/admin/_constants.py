@@ -17,6 +17,7 @@ ROLE_LABELS: dict[str, str] = {
     "super_admin": "슈퍼관리자",
     "operator":    "운영자",
     "settler":     "정산담당",
+    "guest":       "Guest",
 }
 
 VALID_ROLES = frozenset(ROLE_LABELS.keys())

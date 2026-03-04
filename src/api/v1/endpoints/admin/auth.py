@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 from src.api.deps import AdminUserSvc
 from src.core.brute_force import brute_force
 from src.core.csrf import CsrfDepend
-from src.core.session import get_admin_session, set_admin_session
+from src.core.session import get_admin_session, set_admin_session, set_guest_session
 from src.templates_setup import templates
 
 limiter = Limiter(key_func=get_remote_address)
@@ -61,6 +61,15 @@ async def login(
         {"request": request, "error": error},
         status_code=401,
     )
+
+
+# ── Guest Login ───────────────────────────────────────────────────────────────
+
+@router.get("/guest-login")
+async def guest_login(request: Request) -> RedirectResponse:
+    """비회원(Guest) 읽기 전용으로 어드민 페이지 접근."""
+    set_guest_session(request)
+    return RedirectResponse(url="/admin", status_code=302)
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

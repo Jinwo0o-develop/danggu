@@ -5,7 +5,9 @@ Strategy 패턴 적용:
   엔드포인트마다 흩어진 세션 키 문자열과 session.get() 호출을
   단일 모듈로 통합하여 오타·불일치를 방지한다.
 """
-from fastapi import Request
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, Request
 
 from src.core.exceptions import NotAuthenticatedException
 
@@ -41,6 +43,22 @@ def set_admin_session(request: Request, user: dict) -> None:
     request.session[ADMIN_USER_ID]  = user["id"]
     request.session[ADMIN_ROLE]     = user["role"]
     request.session[ADMIN_USERNAME] = user["username"]
+
+
+def set_guest_session(request: Request) -> None:
+    """비회원(Guest) 읽기 전용 세션 저장."""
+    request.session[ADMIN_USER_ID]  = "guest"
+    request.session[ADMIN_ROLE]     = "guest"
+    request.session[ADMIN_USERNAME] = "Guest"
+
+
+def _check_not_guest(request: Request) -> None:
+    """Guest 세션이면 403 발생 — POST 핸들러 의존성으로 사용."""
+    if request.session.get(ADMIN_ROLE) == "guest":
+        raise HTTPException(status_code=403, detail="읽기 전용 모드에서는 변경 작업을 수행할 수 없습니다.")
+
+
+GuestBlock = Annotated[None, Depends(_check_not_guest)]
 
 
 # ── 고객 세션 ─────────────────────────────────────────────────────────────────

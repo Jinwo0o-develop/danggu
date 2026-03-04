@@ -88,6 +88,34 @@
   }
   .register-link a { color:var(--primary); text-decoration:none; }
   .register-link a:hover { text-decoration:underline; }
+
+  .divider {
+    display:flex; align-items:center; gap:12px;
+    margin:24px 0 20px;
+    font-size:11px; color:rgba(255,255,255,0.2);
+    font-family:'Montserrat',sans-serif; letter-spacing:1px;
+  }
+  .divider::before, .divider::after {
+    content:''; flex:1; height:1px;
+    background:rgba(255,255,255,0.08);
+  }
+
+  .btn-guest {
+    display:block; width:100%; padding:12px;
+    background:transparent;
+    color:rgba(255,255,255,0.45);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;
+    font-family:'Montserrat',sans-serif;
+    font-size:13px; font-weight:600; letter-spacing:0.5px;
+    cursor:pointer; transition:all .2s;
+    text-align:center; text-decoration:none;
+  }
+  .btn-guest:hover {
+    color:rgba(255,255,255,0.75);
+    border-color:rgba(255,255,255,0.28);
+    background:rgba(255,255,255,0.04);
+  }
 </style>
 </head>
 <body>
@@ -116,6 +144,8 @@
     </div>
     <button type="submit" class="btn-login">로그인</button>
   </form>
+  <div class="divider">OR</div>
+  <a href="/admin/guest-login" class="btn-guest">👁 비회원(Guest)으로 둘러보기</a>
   <div class="register-link"><a href="/admin/register">계정 등록</a></div>
 </div>
 

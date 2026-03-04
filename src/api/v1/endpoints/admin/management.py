@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from src.api.deps import AdminUserSvc, CommissionRepo, CustomerSvc, DanggnSvc, SettingsRepo
 from src.api.v1.endpoints.admin._constants import ROLE_LABELS, STATUS_META, VALID_ROLES
 from src.core.csrf import CsrfDepend
-from src.core.session import get_admin_session
+from src.core.session import GuestBlock, get_admin_session
 from src.templates_setup import templates
 
 router = APIRouter()
@@ -40,6 +40,7 @@ async def commission_page(
 async def commission_save(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     commission_repo: CommissionRepo,
 ) -> RedirectResponse:
     admin = get_admin_session(request)
@@ -83,6 +84,7 @@ async def settings_page(
 async def settings_save(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     settings_repo: SettingsRepo,
     auto_cancel_days: int = Form(...),
 ) -> RedirectResponse:
@@ -118,6 +120,7 @@ async def register_keys_page(
 async def register_keys_generate(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     service: AdminUserSvc,
 ) -> RedirectResponse:
     admin = get_admin_session(request)
@@ -129,6 +132,7 @@ async def register_keys_generate(
 async def register_keys_revoke(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     key_id: int,
     service: AdminUserSvc,
 ) -> RedirectResponse:
@@ -169,6 +173,7 @@ async def admins_page(
 async def admins_create(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     service: AdminUserSvc,
     username: str = Form(...),
     password: str = Form(...),
@@ -193,6 +198,7 @@ async def admins_create(
 async def admins_delete(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     admin_id: int,
     service: AdminUserSvc,
 ) -> RedirectResponse:
@@ -209,6 +215,7 @@ async def admins_delete(
 async def admins_update_role(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     admin_id: int,
     service: AdminUserSvc,
     role: str = Form(...),
@@ -270,6 +277,7 @@ async def customers_page(
 async def customers_delete(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     customer_id: int,
     customer_service: CustomerSvc,
 ) -> RedirectResponse:

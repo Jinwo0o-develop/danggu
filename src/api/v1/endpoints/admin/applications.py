@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from src.api.deps import DanggnSvc
 from src.api.v1.endpoints.admin._constants import ROLE_LABELS, STATUS_META
 from src.core.csrf import CsrfDepend
-from src.core.session import get_admin_session
+from src.core.session import GuestBlock, get_admin_session
 from src.domain.danggn.state import ApplicationStatus, PROGRESS_STEPS
 from src.templates_setup import templates
 
@@ -95,6 +95,7 @@ async def application_detail(
 async def transition_status(
     request: Request,
     _csrf: CsrfDepend,
+    _no_guest: GuestBlock,
     application_id: int,
     service: DanggnSvc,
     new_status: str = Form(...),
