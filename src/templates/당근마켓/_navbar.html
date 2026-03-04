@@ -34,6 +34,28 @@
     margin: 0 32px;
   }
 
+  .navbar-admin-demo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: rgba(134, 187, 216, 0.75);
+    background: transparent;
+    border: 1px solid rgba(134, 187, 216, 0.35);
+    padding: 5px 13px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-left: 14px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .navbar-admin-demo:hover {
+    color: #86BBD8;
+    border-color: rgba(134, 187, 216, 0.7);
+    background: rgba(134, 187, 216, 0.08);
+  }
+
   .navbar-nav {
     display: flex;
     align-items: center;
@@ -168,6 +190,7 @@
   <a href="{{ logo_href | default('#intro') }}" class="navbar-logo">
     <img src="/static/images/logo.png" alt="SELL IT 로고">
   </a>
+  <a href="/admin/login" class="navbar-admin-demo">admin 견본용</a>
   <div class="navbar-divider"></div>
   <ul class="navbar-nav">
     <li><a href="#how">서비스 소개</a></li>
