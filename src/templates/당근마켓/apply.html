@@ -415,6 +415,52 @@
     font-family: 'Noto Sans KR', sans-serif;
   }
 
+  /* ── Demo Warning Banner ── */
+  .demo-warning {
+    width: 100%;
+    max-width: 580px;
+    margin-bottom: 24px;
+    background: rgba(255, 209, 102, 0.08);
+    border: 1px solid rgba(255, 209, 102, 0.35);
+    border-radius: 14px;
+    padding: 18px 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .demo-warning-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .demo-warning-body {
+    flex: 1;
+  }
+
+  .demo-warning-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FFD166;
+    margin-bottom: 6px;
+  }
+
+  .demo-warning-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255, 209, 102, 0.75);
+    line-height: 1.7;
+  }
+
+  .demo-warning-text strong {
+    color: #FFD166;
+    font-weight: 600;
+  }
+
   @media (max-width: 600px) {
     .form-card, .success-card { padding: 28px 20px; }
   }
@@ -429,6 +475,21 @@
 {% include '당근마켓/_navbar.html' %}
 
 <main class="apply-page">
+
+  {% if not success %}
+  <!-- DEMO WARNING BANNER -->
+  <div class="demo-warning">
+    <div class="demo-warning-icon">⚠️</div>
+    <div class="demo-warning-body">
+      <div class="demo-warning-title">맛보기 전용 — 현재 서비스 운영 중단</div>
+      <div class="demo-warning-text">
+        이 신청 기능은 <strong>견본(데모) 목적</strong>으로만 제공되며, 현재 실제 서비스는 운영되지 않습니다.<br>
+        <strong>실제 전화번호·이름·개인정보를 입력하지 마십시오.</strong>
+        가상의 정보로 자유롭게 테스트해 보세요.
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {% if success %}
   <!-- SUCCESS STATE -->
