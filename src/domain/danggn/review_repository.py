@@ -8,9 +8,13 @@ class ReviewRepository:
         self._db = get_supabase()
 
     def get_all(self) -> list[dict]:
+        if self._db is None:
+            return []
         r = self._db.table("danggn_reviews").select("*").order("id").execute()
         return r.data or []
 
     def create(self, data: ReviewCreate) -> dict:
+        if self._db is None:
+            return {"id": 0, **data.model_dump(), "created_at": ""}
         r = self._db.table("danggn_reviews").insert(data.model_dump()).execute()
         return r.data[0]

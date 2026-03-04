@@ -17,15 +17,21 @@ class CommissionRepository:
         return {row["category"]: row["rate"] for row in rows}
 
     def get_all(self) -> dict[str, float]:
+        if self._db is None:
+            return dict(DEFAULT_RATES)
         r = self._db.table("danggn_commission_rates").select("*").execute()
-        return self._rows_to_dict(r.data or [])
+        return self._rows_to_dict(r.data or []) or dict(DEFAULT_RATES)
 
     def get_categories(self) -> list[str]:
+        if self._db is None:
+            return list(DEFAULT_RATES.keys())
         r = self._db.table("danggn_commission_rates").select("category").execute()
-        return [row["category"] for row in (r.data or [])]
+        return [row["category"] for row in (r.data or [])] or list(DEFAULT_RATES.keys())
 
     def get_rate(self, category: str) -> float:
         """카테고리 수수료율 반환. 없으면 '기타' 요율로 폴백."""
+        if self._db is None:
+            return DEFAULT_RATES.get(category, DEFAULT_RATES["기타"])
         r = (
             self._db.table("danggn_commission_rates")
             .select("rate")
@@ -35,7 +41,6 @@ class CommissionRepository:
         )
         if r.data:
             return r.data["rate"]
-        # 폴백: '기타' 조회
         r2 = (
             self._db.table("danggn_commission_rates")
             .select("rate")
@@ -46,10 +51,14 @@ class CommissionRepository:
         return r2.data["rate"] if r2.data else DEFAULT_RATES["기타"]
 
     def set_rate(self, category: str, rate: float) -> None:
+        if self._db is None:
+            return
         self._db.table("danggn_commission_rates").upsert(
             {"category": category, "rate": rate}
         ).execute()
 
     def save_all(self, rates: dict[str, float]) -> None:
+        if self._db is None:
+            return
         rows = [{"category": cat, "rate": r} for cat, r in rates.items()]
         self._db.table("danggn_commission_rates").upsert(rows).execute()

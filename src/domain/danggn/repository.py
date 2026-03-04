@@ -2,6 +2,7 @@
 DanggnApplicationRepository — 당근마켓 신청 데이터 저장소 (Supabase).
 
 lookup_code 자동 생성 로직은 이 클래스의 고유 책임.
+Supabase 미설정 시 데모 모드로 동작한다.
 """
 import secrets
 
@@ -21,6 +22,8 @@ class DanggnApplicationRepository:
     # ── 조회 ─────────────────────────────────────────────────────
 
     def get_all(self) -> list[dict]:
+        if self._db is None:
+            return []
         r = self._db.table("danggn_applications").select("*").order("id").execute()
         apps = r.data or []
         # 누락된 lookup_code 보정
@@ -34,6 +37,8 @@ class DanggnApplicationRepository:
         return apps
 
     def get_by_id(self, application_id: int) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("danggn_applications")
             .select("*")
@@ -51,6 +56,8 @@ class DanggnApplicationRepository:
         return app
 
     def get_by_phone(self, phone: str) -> list[dict]:
+        if self._db is None:
+            return []
         r = (
             self._db.table("danggn_applications")
             .select("*")
@@ -69,6 +76,8 @@ class DanggnApplicationRepository:
         return apps
 
     def get_by_lookup_code(self, code: str) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("danggn_applications")
             .select("*")
@@ -81,6 +90,19 @@ class DanggnApplicationRepository:
     # ── 쓰기 ─────────────────────────────────────────────────────
 
     def create(self, data: ApplicationCreate) -> dict:
+        if self._db is None:
+            # 데모 모드: 실제 저장 없이 가상 응답 반환
+            return {
+                "id": 0,
+                "lookup_code": self._generate_lookup_code(),
+                "status": "접수됨",
+                **data.model_dump(),
+                "created_at": "",
+                "sale_price": None,
+                "commission_rate": None,
+                "commission_amount": None,
+                "settlement_amount": None,
+            }
         payload = {
             **data.model_dump(),
             "status": "접수됨",
@@ -97,6 +119,8 @@ class DanggnApplicationRepository:
         return self.update_fields(application_id, {"status": new_status})
 
     def update_fields(self, application_id: int, fields: dict) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("danggn_applications")
             .update(fields)

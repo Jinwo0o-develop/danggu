@@ -13,6 +13,8 @@ class AdminRepository:
 
     def get_credentials(self) -> dict:
         """admin_users 테이블에서 첫 번째 super_admin 계정을 반환."""
+        if self._db is None:
+            return {}
         r = (
             self._db.table("admin_users")
             .select("username, hashed_password")

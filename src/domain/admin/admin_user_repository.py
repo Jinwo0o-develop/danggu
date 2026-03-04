@@ -13,6 +13,8 @@ class AdminUserRepository:
     # ── 조회 ──────────────────────────────────────────────────────
 
     def get_by_username(self, username: str) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("admin_users")
             .select("*")
@@ -23,6 +25,8 @@ class AdminUserRepository:
         return r.data
 
     def get_by_id(self, admin_id: int) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("admin_users")
             .select("*")
@@ -33,12 +37,16 @@ class AdminUserRepository:
         return r.data
 
     def get_all(self) -> list[dict]:
+        if self._db is None:
+            return []
         r = self._db.table("admin_users").select("*").order("id").execute()
         return r.data or []
 
     # ── 쓰기 ──────────────────────────────────────────────────────
 
     def create(self, username: str, hashed_password: str, role: str) -> dict:
+        if self._db is None:
+            raise ValueError("데모 모드: 관리자 계정을 생성할 수 없습니다.")
         if self.get_by_username(username) is not None:
             raise ValueError(f"이미 존재하는 사용자명입니다: {username}")
         payload = {
@@ -50,10 +58,14 @@ class AdminUserRepository:
         return r.data[0]
 
     def delete(self, admin_id: int) -> bool:
+        if self._db is None:
+            return False
         r = self._db.table("admin_users").delete().eq("id", admin_id).execute()
         return bool(r.data)
 
     def update_role(self, admin_id: int, role: str) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("admin_users")
             .update({"role": role})

@@ -15,7 +15,8 @@ class RegisterKeyRepository:
         return "".join(secrets.choice(alphabet) for _ in range(12))
 
     def create(self, created_by: str) -> dict:
-        # 중복 없는 키 생성
+        if self._db is None:
+            return {}
         key = self._make_key()
         while self.get_by_key(key) is not None:
             key = self._make_key()
@@ -31,6 +32,8 @@ class RegisterKeyRepository:
         return r.data[0]
 
     def get_all(self) -> list[dict]:
+        if self._db is None:
+            return []
         r = (
             self._db.table("admin_register_keys")
             .select("*")
@@ -40,6 +43,8 @@ class RegisterKeyRepository:
         return r.data or []
 
     def get_by_key(self, key: str) -> dict | None:
+        if self._db is None:
+            return None
         r = (
             self._db.table("admin_register_keys")
             .select("*")
@@ -68,6 +73,8 @@ class RegisterKeyRepository:
 
     def revoke(self, key_id: int) -> bool:
         """폐지 처리. 이미 사용된 키는 False 반환."""
+        if self._db is None:
+            return False
         r_find = (
             self._db.table("admin_register_keys")
             .select("used")
