@@ -109,9 +109,9 @@ async def not_authenticated_handler(request: Request, exc: NotAuthenticatedExcep
     return RedirectResponse(url="/admin/login", status_code=302)
 
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+@app.get("/")
+async def index() -> RedirectResponse:
+    return RedirectResponse(url="/danggn/", status_code=302)
 
 
 @app.get("/nanumsell", response_class=HTMLResponse)
