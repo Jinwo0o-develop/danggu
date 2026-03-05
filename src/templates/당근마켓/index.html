@@ -248,7 +248,11 @@
     line-height: 1;
     animation: truckRide 6s cubic-bezier(.4,0,.6,1) infinite;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));
+    pointer-events: auto;
+    cursor: grab;
+    user-select: none;
   }
+  .truck-anim:active { cursor: grabbing; }
   @keyframes truckRide {
     0%   { left: 0%;    opacity: 1; }
     78%  { left: 100%;  opacity: 1; }
@@ -1117,6 +1121,147 @@
 
     setTimeout(() => { rain.remove(); toast.remove(); }, 5500);
   }
+
+  // ── 트럭 드래그 & 로켓 귀환 ──
+  (function initTruckDrag() {
+    const track = document.querySelector('.truck-track');
+    const truck = document.querySelector('.truck-anim');
+    if (!track || !truck) return;
+
+    let dragging  = false;
+    let returning = false;
+    let retFrame  = null;
+    let boostTimer = null;
+    let truckX = 0, truckY = 0;
+
+    truck.addEventListener('mousedown', e => {
+      e.preventDefault();
+      if (returning) stopReturn();
+
+      const r = truck.getBoundingClientRect();
+      truckX = r.left + r.width  / 2;
+      truckY = r.top  + r.height / 2;
+      const offX = e.clientX - truckX;
+      const offY = e.clientY - truckY;
+
+      // CSS 애니메이션 정지 → fixed 전환
+      truck.style.animation  = 'none';
+      truck.style.position   = 'fixed';
+      truck.style.left       = truckX + 'px';
+      truck.style.top        = truckY + 'px';
+      truck.style.transform  = 'translate(-50%,-50%) scale(1.4)';
+      truck.style.zIndex     = '9995';
+      truck.style.transition = 'transform 0.12s';
+      dragging = true;
+
+      function onMove(ev) {
+        if (!dragging) return;
+        truckX = ev.clientX - offX;
+        truckY = ev.clientY - offY;
+        truck.style.left = truckX + 'px';
+        truck.style.top  = truckY + 'px';
+      }
+
+      function onUp() {
+        if (!dragging) return;
+        dragging = false;
+        truck.style.transform = 'translate(-50%,-50%) scale(1)';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+        startReturn();
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
+    function getTarget() {
+      const tr = track.getBoundingClientRect();
+      return { x: tr.left, y: tr.top };
+    }
+
+    function startReturn() {
+      returning = true;
+
+      // 부스터 파티클 주기적 발사
+      boostTimer = setInterval(() => {
+        const tgt = getTarget();
+        spawnBooster(truckX, truckY, tgt.x - truckX, tgt.y - truckY);
+      }, 45);
+
+      function loop() {
+        const tgt = getTarget();
+        const dx  = tgt.x - truckX;
+        const dy  = tgt.y - truckY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 5) { finishReturn(); return; }
+
+        // 빠른 easing — 로켓 느낌
+        truckX += dx * 0.14;
+        truckY += dy * 0.14;
+        truck.style.left = truckX + 'px';
+        truck.style.top  = truckY + 'px';
+        retFrame = requestAnimationFrame(loop);
+      }
+      retFrame = requestAnimationFrame(loop);
+    }
+
+    function stopReturn() {
+      clearInterval(boostTimer);
+      cancelAnimationFrame(retFrame);
+      returning = false;
+    }
+
+    function finishReturn() {
+      stopReturn();
+      // CSS 애니메이션 복원
+      truck.style.position   = '';
+      truck.style.left       = '';
+      truck.style.top        = '';
+      truck.style.transform  = '';
+      truck.style.zIndex     = '';
+      truck.style.transition = '';
+      truck.style.animation  = '';
+    }
+
+    function spawnBooster(x, y, dx, dy) {
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const bx  = -(dx / len); // 진행 반대 방향 (뒤쪽)
+      const by  = -(dy / len);
+      const emojis = ['🔥', '🔥', '✨', '💨', '⚡'];
+
+      for (let i = 0; i < 2; i++) {
+        const p      = document.createElement('div');
+        const spread = (Math.random() - 0.5) * 26;
+        const dist   = 16 + Math.random() * 22;
+        const size   = 9  + Math.random() * 10;
+
+        p.style.cssText = [
+          'position:fixed',
+          `left:${x}px`,
+          `top:${y}px`,
+          `font-size:${size}px`,
+          'pointer-events:none',
+          'z-index:9990',
+          'transform:translate(-50%,-50%)',
+          'opacity:1',
+          'transition:left .38s ease-out,top .38s ease-out,opacity .38s ease-out,transform .38s ease-out',
+        ].join(';');
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        document.body.appendChild(p);
+
+        requestAnimationFrame(() => {
+          p.style.left      = (x + bx * dist + spread * Math.abs(by)) + 'px';
+          p.style.top       = (y + by * dist + spread * Math.abs(bx)) + 'px';
+          p.style.opacity   = '0';
+          p.style.transform = 'translate(-50%,-50%) scale(0.2)';
+        });
+
+        setTimeout(() => p.remove(), 400);
+      }
+    }
+  })();
 </script>
 </body>
 </html>
