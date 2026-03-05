@@ -246,13 +246,15 @@
     transform: translate(-50%, -50%);
     font-size: 22px;
     line-height: 1;
-    animation: truckRide 6s cubic-bezier(.4,0,.6,1) infinite;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));
+    animation: truckRide 6s cubic-bezier(.4,0,.6,1) infinite, truckGlow 1.8s ease-in-out infinite;
     pointer-events: auto;
     cursor: grab;
     user-select: none;
   }
-  .truck-anim:active { cursor: grabbing; }
+  @keyframes truckGlow {
+    0%,100% { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15)); }
+    50%      { filter: drop-shadow(0 0 14px rgba(242,100,25,0.85)); }
+  }
   @keyframes truckRide {
     0%   { left: 0%;    opacity: 1; }
     78%  { left: 100%;  opacity: 1; }
@@ -1282,59 +1284,83 @@
     outer.addEventListener('mouseleave', () => { paused = false; startTimer(); });
   })();
 
-  // ── 트럭 드래그 & 로켓 귀환 ──
+  // ── 트럭 드래그 & 로켓 귀환 (ghost 방식) ──
   (function initTruckDrag() {
-    const track = document.querySelector('.truck-track');
     const truck = document.querySelector('.truck-anim');
-    if (!track || !truck) return;
+    const track = document.querySelector('.truck-track');
+    if (!truck || !track) return;
 
-    let dragging  = false;
-    let returning = false;
-    let retFrame  = null;
+    let ghost      = null;   // body에 붙는 고스트 엘리먼트
+    let isDragging = false;
+    let returning  = false;
+    let retFrame   = null;
     let boostTimer = null;
-    let truckX = 0, truckY = 0;
+    let curX = 0, curY = 0;
+    let offX = 0, offY = 0;
 
-    truck.addEventListener('mousedown', e => {
+    // 커스텀 커서 피드백
+    const dotEl = document.getElementById('cursor');
+    truck.addEventListener('mouseenter', () => { if (dotEl) dotEl.style.transform = 'scale(2.2)'; });
+    truck.addEventListener('mouseleave', () => { if (dotEl && !isDragging) dotEl.style.transform = ''; });
+
+    // pointerdown — ghost 생성
+    truck.addEventListener('pointerdown', e => {
       e.preventDefault();
-      if (returning) stopReturn();
+      if (returning) cancelReturn();
 
       const r = truck.getBoundingClientRect();
-      truckX = r.left + r.width  / 2;
-      truckY = r.top  + r.height / 2;
-      const offX = e.clientX - truckX;
-      const offY = e.clientY - truckY;
+      curX = r.left + r.width  / 2;
+      curY = r.top  + r.height / 2;
+      offX = e.clientX - curX;
+      offY = e.clientY - curY;
 
-      // CSS 애니메이션 정지 → fixed 전환
-      truck.style.animation  = 'none';
-      truck.style.position   = 'fixed';
-      truck.style.left       = truckX + 'px';
-      truck.style.top        = truckY + 'px';
-      truck.style.transform  = 'translate(-50%,-50%) scale(1.4)';
-      truck.style.zIndex     = '9995';
-      truck.style.transition = 'transform 0.12s';
-      dragging = true;
+      // ghost: body에 직접 붙여 overflow / z-index 문제 원천 차단
+      ghost = document.createElement('div');
+      ghost.textContent = '🚚';
+      ghost.style.cssText = [
+        'position:fixed',
+        `left:${curX}px`,
+        `top:${curY}px`,
+        'font-size:26px',
+        'transform:translate(-50%,-50%) scale(1.35)',
+        'pointer-events:none',
+        'z-index:9995',
+        'user-select:none',
+        'transition:transform .12s',
+        'filter:drop-shadow(0 4px 14px rgba(242,100,25,0.7))',
+      ].join(';');
+      document.body.appendChild(ghost);
 
-      function onMove(ev) {
-        if (!dragging) return;
-        truckX = ev.clientX - offX;
-        truckY = ev.clientY - offY;
-        truck.style.left = truckX + 'px';
-        truck.style.top  = truckY + 'px';
-      }
+      // 원본 트럭 숨김
+      truck.style.opacity   = '0';
+      truck.style.animation = 'none';
+      isDragging = true;
+      if (dotEl) dotEl.style.transform = 'scale(2.2)';
 
-      function onUp() {
-        if (!dragging) return;
-        dragging = false;
-        truck.style.transform = 'translate(-50%,-50%) scale(1)';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup',   onUp);
-        startReturn();
-      }
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup',   onUp);
+      truck.setPointerCapture(e.pointerId);
     });
 
+    // pointermove
+    truck.addEventListener('pointermove', e => {
+      if (!isDragging || !ghost) return;
+      curX = e.clientX - offX;
+      curY = e.clientY - offY;
+      ghost.style.left = curX + 'px';
+      ghost.style.top  = curY + 'px';
+    });
+
+    // pointerup / pointercancel
+    function onRelease() {
+      if (!isDragging) return;
+      isDragging = false;
+      if (dotEl) dotEl.style.transform = '';
+      if (ghost) ghost.style.transform = 'translate(-50%,-50%) scale(1)';
+      startReturn();
+    }
+    truck.addEventListener('pointerup',     onRelease);
+    truck.addEventListener('pointercancel', onRelease);
+
+    // 귀환 목표: track의 시작점 (left edge, 수직 중앙)
     function getTarget() {
       const tr = track.getBoundingClientRect();
       return { x: tr.left, y: tr.top };
@@ -1342,83 +1368,66 @@
 
     function startReturn() {
       returning = true;
-
-      // 부스터 파티클 주기적 발사
       boostTimer = setInterval(() => {
+        if (!ghost) return;
         const tgt = getTarget();
-        spawnBooster(truckX, truckY, tgt.x - truckX, tgt.y - truckY);
+        spawnBooster(curX, curY, tgt.x - curX, tgt.y - curY);
       }, 45);
 
-      function loop() {
-        const tgt = getTarget();
-        const dx  = tgt.x - truckX;
-        const dy  = tgt.y - truckY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
+      (function loop() {
+        const tgt  = getTarget();
+        const dx   = tgt.x - curX;
+        const dy   = tgt.y - curY;
+        const dist = Math.hypot(dx, dy);
         if (dist < 5) { finishReturn(); return; }
-
-        // 빠른 easing — 로켓 느낌
-        truckX += dx * 0.14;
-        truckY += dy * 0.14;
-        truck.style.left = truckX + 'px';
-        truck.style.top  = truckY + 'px';
+        curX += dx * 0.14;
+        curY += dy * 0.14;
+        if (ghost) { ghost.style.left = curX + 'px'; ghost.style.top = curY + 'px'; }
         retFrame = requestAnimationFrame(loop);
-      }
-      retFrame = requestAnimationFrame(loop);
+      })();
     }
 
-    function stopReturn() {
+    function cancelReturn() {
       clearInterval(boostTimer);
       cancelAnimationFrame(retFrame);
       returning = false;
+      if (ghost) { ghost.remove(); ghost = null; }
     }
 
     function finishReturn() {
-      stopReturn();
-      // CSS 애니메이션 복원
-      truck.style.position   = '';
-      truck.style.left       = '';
-      truck.style.top        = '';
-      truck.style.transform  = '';
-      truck.style.zIndex     = '';
-      truck.style.transition = '';
-      truck.style.animation  = '';
+      cancelReturn();
+      // 원본 트럭 복원
+      truck.style.opacity   = '';
+      truck.style.animation = '';
     }
 
     function spawnBooster(x, y, dx, dy) {
-      const len = Math.sqrt(dx * dx + dy * dy) || 1;
-      const bx  = -(dx / len); // 진행 반대 방향 (뒤쪽)
-      const by  = -(dy / len);
+      const len    = Math.hypot(dx, dy) || 1;
+      const bx     = -(dx / len);
+      const by     = -(dy / len);
       const emojis = ['🔥', '🔥', '✨', '💨', '⚡'];
-
       for (let i = 0; i < 2; i++) {
         const p      = document.createElement('div');
-        const spread = (Math.random() - 0.5) * 26;
-        const dist   = 16 + Math.random() * 22;
-        const size   = 9  + Math.random() * 10;
-
+        const spread = (Math.random() - 0.5) * 28;
+        const dist   = 18 + Math.random() * 24;
+        const size   = 10 + Math.random() * 10;
         p.style.cssText = [
           'position:fixed',
-          `left:${x}px`,
-          `top:${y}px`,
+          `left:${x}px`, `top:${y}px`,
           `font-size:${size}px`,
-          'pointer-events:none',
-          'z-index:9990',
-          'transform:translate(-50%,-50%)',
-          'opacity:1',
-          'transition:left .38s ease-out,top .38s ease-out,opacity .38s ease-out,transform .38s ease-out',
+          'pointer-events:none', 'z-index:9990',
+          'transform:translate(-50%,-50%)', 'opacity:1',
+          'transition:left .4s ease-out,top .4s ease-out,opacity .4s ease-out,transform .4s ease-out',
         ].join(';');
         p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
         document.body.appendChild(p);
-
         requestAnimationFrame(() => {
           p.style.left      = (x + bx * dist + spread * Math.abs(by)) + 'px';
           p.style.top       = (y + by * dist + spread * Math.abs(bx)) + 'px';
           p.style.opacity   = '0';
           p.style.transform = 'translate(-50%,-50%) scale(0.2)';
         });
-
-        setTimeout(() => p.remove(), 400);
+        setTimeout(() => p.remove(), 420);
       }
     }
   })();
