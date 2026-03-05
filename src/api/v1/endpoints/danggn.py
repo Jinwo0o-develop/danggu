@@ -80,6 +80,9 @@ async def danggn_apply_submit(
             user_id=request.session.get("user_id"),
         )
     )
+    # 데모 모드(Supabase 미설정): id=0이 반환되므로 세션에 임시 저장
+    if application.id == 0:
+        request.session["demo_app"] = application.model_dump()
     return templates.TemplateResponse(
         "당근마켓/apply.html",
         {
@@ -205,6 +208,9 @@ async def danggn_status(
     code: str = "",
 ) -> HTMLResponse | RedirectResponse:
     app = service.get_by_id(application_id)
+    # 데모 모드(Supabase 미설정) 폴백: 세션에 저장된 임시 신청 데이터 조회
+    if app is None and application_id == 0:
+        app = request.session.get("demo_app")
     if app is None:
         raise HTTPException(status_code=404, detail="신청을 찾을 수 없습니다.")
 

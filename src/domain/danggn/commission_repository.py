@@ -25,8 +25,11 @@ class CommissionRepository:
     def get_categories(self) -> list[str]:
         if self._db is None:
             return list(DEFAULT_RATES.keys())
-        r = self._db.table("danggn_commission_rates").select("category").execute()
-        return [row["category"] for row in (r.data or [])] or list(DEFAULT_RATES.keys())
+        try:
+            r = self._db.table("danggn_commission_rates").select("category").execute()
+            return [row["category"] for row in (r.data or [])] or list(DEFAULT_RATES.keys())
+        except Exception:
+            return list(DEFAULT_RATES.keys())
 
     def get_rate(self, category: str) -> float:
         """카테고리 수수료율 반환. 없으면 '기타' 요율로 폴백."""
