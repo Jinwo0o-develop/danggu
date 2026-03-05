@@ -49,9 +49,13 @@
   .empty{text-align:center;padding:48px 20px;color:var(--sub);}
   .empty-icon{font-size:36px;margin-bottom:12px;}
   @media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr};}
+  #bgCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+  .page { position:relative; z-index:1; }
 </style>
+<script src="/static/js/danggn-fx.js"></script>
 </head>
 <body>
+<canvas id="bgCanvas"></canvas>
 
 <header class="topbar">
   <a href="/admin" class="topbar-logo">SELL IT</a>
@@ -161,6 +165,7 @@
   </div>
 
 </main>
+<script>DanggnFX.createBgCanvas(document.getElementById('bgCanvas'));</script>
 {% include 'admin/_shared.html' %}
 </body>
 </html>

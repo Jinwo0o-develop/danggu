@@ -10,6 +10,13 @@
  *   DanggnFX.initCursor();
  *   DanggnFX.createBgCanvas(document.getElementById('bgCanvas'));
  *   DanggnFX.createBgCanvas(sectionCanvas, { fullscreen: false, orbCount: 7 });
+ *   DanggnFX.createBgCanvas(lightCanvas, { colorScheme: 'light', orbCount: 4 });
+ *   DanggnFX.autoInit();  // id="bgCanvas" + id="cursor" 자동 감지 초기화
+ *
+ * colorScheme 옵션:
+ *   'dark'  (기본) — 어두운 배경용 오렌지/시안 파티클
+ *   'light' — 밝은 배경용 저채도·저알파 파티클
+ *   'warm'  — 오렌지 CTA 배경용 흰색/크림 파티클
  */
 const DanggnFX = (() => {
   'use strict';
@@ -49,9 +56,10 @@ const DanggnFX = (() => {
   // 배경 Canvas 애니메이션 팩토리
   //
   // options:
-  //   fullscreen {boolean} — true: window 크기(기본값), false: 부모 엘리먼트 크기
-  //   orbCount   {number}  — bokeh orb 개수 (기본값 8)
-  //   emberCount {number}  — ember 파티클 개수 (기본값 75)
+  //   fullscreen   {boolean} — true: window 크기(기본), false: 부모 엘리먼트 크기
+  //   orbCount     {number}  — bokeh orb 개수 (기본 8)
+  //   emberCount   {number}  — ember 파티클 개수 (기본 75)
+  //   colorScheme  {string}  — 'dark'(기본) | 'light' | 'warm'
   // ─────────────────────────────────────────────────────────
 
   function createBgCanvas(canvas, options = {}) {
@@ -61,6 +69,38 @@ const DanggnFX = (() => {
     const fullscreen  = options.fullscreen !== false;
     const orbCount    = options.orbCount   ?? 8;
     const emberCount  = options.emberCount ?? 75;
+    const scheme      = options.colorScheme || 'dark';
+
+    // ── 색상 헬퍼 ────────────────────────────────────────
+    function orbColor(orange, alpha) {
+      if (scheme === 'light') {
+        return orange
+          ? `rgba(200,70,5,${(alpha * 0.45).toFixed(3)})`
+          : `rgba(60,130,190,${(alpha * 0.45).toFixed(3)})`;
+      }
+      if (scheme === 'warm') {
+        return orange
+          ? `rgba(255,255,255,${(alpha * 0.22).toFixed(3)})`
+          : `rgba(255,220,170,${(alpha * 0.18).toFixed(3)})`;
+      }
+      return orange
+        ? `rgba(242,100,25,${alpha})`
+        : `rgba(134,187,216,${alpha})`;
+    }
+
+    function emberColor(orange, alpha) {
+      if (scheme === 'light') {
+        return orange
+          ? `rgba(200,70,5,${(alpha * 0.35).toFixed(3)})`
+          : `rgba(60,130,190,${(alpha * 0.35).toFixed(3)})`;
+      }
+      if (scheme === 'warm') {
+        return `rgba(255,255,255,${(alpha * 0.30).toFixed(3)})`;
+      }
+      return orange
+        ? `rgba(242,100,25,${alpha})`
+        : `rgba(134,187,216,${alpha})`;
+    }
 
     // ── 크기 동기화 ──────────────────────────────────────
     function resize() {
@@ -120,7 +160,7 @@ const DanggnFX = (() => {
 
         const a = 0.032 + Math.sin(o.phase) * 0.02;
         const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, o.orange ? `rgba(242,100,25,${a})` : `rgba(134,187,216,${a})`);
+        g.addColorStop(0, orbColor(o.orange, a));
         g.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = g;
         ctx.beginPath();
@@ -134,9 +174,7 @@ const DanggnFX = (() => {
         e.x += e.vx + Math.sin(e.wobble) * 0.28;
         e.y += e.vy;
         if (e.y < -8) Object.assign(e, newEmber(true));
-        ctx.fillStyle = e.orange
-          ? `rgba(242,100,25,${e.alpha})`
-          : `rgba(134,187,216,${e.alpha})`;
+        ctx.fillStyle = emberColor(e.orange, e.alpha);
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
         ctx.fill();
@@ -147,8 +185,18 @@ const DanggnFX = (() => {
   }
 
   // ─────────────────────────────────────────────────────────
+  // autoInit — id="bgCanvas" + id="cursor" 자동 감지 초기화
+  // ─────────────────────────────────────────────────────────
+
+  function autoInit(options = {}) {
+    const canvas = document.getElementById('bgCanvas');
+    if (canvas) createBgCanvas(canvas, options);
+    if (document.getElementById('cursor')) initCursor();
+  }
+
+  // ─────────────────────────────────────────────────────────
   // Public API
   // ─────────────────────────────────────────────────────────
-  return { initCursor, createBgCanvas };
+  return { initCursor, createBgCanvas, autoInit };
 
 })();
