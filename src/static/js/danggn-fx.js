@@ -36,16 +36,59 @@ const DanggnFX = (() => {
     if (!cursor || !follower) return;
 
     let mx = 0, my = 0, fx = 0, fy = 0;
+    let firstMove = true;
+
+    // 초기 숨김 — 첫 mousemove 전까지 표시하지 않음
+    cursor.style.opacity   = '0';
+    follower.style.opacity = '0';
 
     document.addEventListener('mousemove', e => {
       mx = e.clientX; my = e.clientY;
       cursor.style.left = mx - 6 + 'px';
       cursor.style.top  = my - 6 + 'px';
+
+      if (firstMove) {
+        // 새로고침 후 중앙에서 따라오지 않도록 첫 위치에서 바로 시작
+        fx = mx - 18; fy = my - 18;
+        firstMove = false;
+      }
+
+      cursor.style.opacity   = '';
+      follower.style.opacity = '';
     });
 
+    // 커서가 화면 밖으로 나가면 둘 다 숨김
+    document.addEventListener('mouseleave', () => {
+      cursor.style.opacity   = '0';
+      follower.style.opacity = '0';
+    });
+
+    // 커서가 화면 안으로 돌아오면 다시 표시
+    document.addEventListener('mouseenter', e => {
+      if (!firstMove) {
+        mx = e.clientX; my = e.clientY;
+        cursor.style.left      = mx - 6 + 'px';
+        cursor.style.top       = my - 6 + 'px';
+        cursor.style.opacity   = '';
+        follower.style.opacity = '';
+      }
+    });
+
+    // 마지막 섹션(CTA, 오렌지 배경)에서 보색(파랑 #0D9BE6) 적용
+    const ctaSection = document.getElementById('cta');
+    if (ctaSection) {
+      const ctaObs = new IntersectionObserver(entries => {
+        const inCta = entries[0].isIntersecting;
+        cursor.style.backgroundColor = inCta ? '#0D9BE6' : '';
+        follower.style.borderColor   = inCta ? '#0D9BE6' : '';
+      }, { threshold: 0.5 });
+      ctaObs.observe(ctaSection);
+    }
+
     (function loop() {
-      fx += (mx - fx - 18) * 0.12;
-      fy += (my - fy - 18) * 0.12;
+      // 0.12 → 0.25: 더 빠르게 따라오도록
+      fx += (mx - fx - 18) * 0.25;
+      fy += (my - fy - 18) * 0.25;
       follower.style.left = fx + 'px';
       follower.style.top  = fy + 'px';
       requestAnimationFrame(loop);
@@ -146,8 +189,10 @@ const DanggnFX = (() => {
     }
     const embers = Array.from({ length: emberCount }, () => newEmber(false));
 
-    // ── 렌더 루프 ────────────────────────────────────────
-    (function bgLoop() {
+    // ── 렌더 루프 (pause/resume 지원) ───────────────────
+    let animId = null;
+
+    function bgLoop() {
       ctx.clearRect(0, 0, W(), H());
 
       // Orbs
@@ -180,8 +225,32 @@ const DanggnFX = (() => {
         ctx.fill();
       });
 
-      requestAnimationFrame(bgLoop);
-    })();
+      animId = requestAnimationFrame(bgLoop);
+    }
+
+    function startLoop() { if (animId === null) animId = requestAnimationFrame(bgLoop); }
+    function stopLoop()  { cancelAnimationFrame(animId); animId = null; }
+
+    startLoop();
+
+    // 탭 숨김 시 루프 일시정지 → CPU/GPU 절약
+    document.addEventListener('visibilitychange', () =>
+      document.hidden ? stopLoop() : startLoop()
+    );
+
+    // 비전체화면 캔버스: 뷰포트 밖으로 나가면 일시정지
+    if (!fullscreen) {
+      new IntersectionObserver(
+        ([entry]) => entry.isIntersecting ? startLoop() : stopLoop(),
+        { threshold: 0 }
+      ).observe(canvas);
+
+      // 부모 크기 변화 감지 → 캔버스 크기 동기화
+      new ResizeObserver(() => {
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }).observe(canvas.parentElement ?? canvas);
+    }
   }
 
   // ─────────────────────────────────────────────────────────

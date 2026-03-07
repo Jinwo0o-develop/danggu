@@ -1,672 +1,235 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Give, We Sell.</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
-<script src="/static/js/danggn-fx.js"></script>
-<style>
-  :root {
-    --primary: #F26419;
-    --secondary: #86BBD8;
-    --dark: #1a1a1a;
-    --light: #fafafa;
-  }
+{% extends '당근마켓/_base.html' %}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+{% block title %}Give, We Sell.{% endblock %}
 
-  html {
-    scroll-snap-type: y mandatory;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
-  }
+{# index는 scroll-snap 레이아웃 — html 엘리먼트에 스크롤 속성 추가 #}
+{% block html_style %}
+html {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  /* 스크롤바 숨김 (스크롤 기능은 유지) */
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge */
+}
+html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
+{% endblock %}
 
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--dark);
-    color: var(--light);
-    cursor: none;
-  }
+{# 스크롤-스냅 페이지는 min-height 불필요 #}
+{% block body_style %}{% endblock %}
 
-  /* Custom cursor */
-  .cursor {
-    width: 12px; height: 12px;
-    background: var(--primary);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-    transition: transform 0.1s ease;
-  }
-  .cursor-follower {
-    width: 36px; height: 36px;
-    border: 2px solid var(--secondary);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 9998;
-    transition: all 0.15s ease;
-    opacity: 0.6;
-  }
+{# 섹션별 캔버스 사용 — 전역 bgCanvas 불필요 #}
+{% block bg_canvas %}{% endblock %}
+{% block bg_canvas_init %}{% endblock %}
 
-  /* Sections */
+{% block page_css %}
+  /* ── Sections ── */
   section {
-    height: 100vh;
-    scroll-snap-align: start;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+    height: 100vh; scroll-snap-align: start;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
   }
 
   /* ── SECTION 1: INTRO ── */
-  #intro {
-    background: var(--dark);
-    flex-direction: column;
-    padding-top: 52px;
-  }
-
+  #intro { background: var(--dark); flex-direction: column; padding-top: 52px; }
   .noise-overlay {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity: 0.4;
-    pointer-events: none;
+    opacity: .4; pointer-events: none;
   }
-
   .intro-bg-circle {
-    position: absolute;
-    width: 700px; height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(242,100,25,0.15) 0%, transparent 70%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    position: absolute; width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(242,100,25,.15) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
     animation: pulse 4s ease-in-out infinite;
   }
-
   @keyframes pulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    0%,100% { transform: translate(-50%,-50%) scale(1);   opacity: .6; }
+    50%      { transform: translate(-50%,-50%) scale(1.1); opacity: 1;  }
   }
-
   .intro-content {
-    text-align: center;
-    z-index: 2;
-    animation: fadeUp 1.2s ease forwards;
-    opacity: 0;
-    transform: translateY(40px);
-    user-select: none;
-    -webkit-user-select: none;
+    text-align: center; z-index: 2;
+    animation: fadeUp 1.2s ease forwards; opacity: 0; transform: translateY(40px);
+    user-select: none; -webkit-user-select: none;
   }
-
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
   .intro-badge {
-    display: inline-block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 4px;
-    color: var(--secondary);
-    text-transform: uppercase;
-    border: 1px solid rgba(134,187,216,0.4);
-    padding: 6px 18px;
-    border-radius: 100px;
-    margin-bottom: 32px;
+    display: inline-block; font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 4px; color: var(--secondary); text-transform: uppercase;
+    border: 1px solid rgba(134,187,216,.4); padding: 6px 18px; border-radius: 100px; margin-bottom: 32px;
   }
-
-  .intro-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(80px, 14vw, 180px);
-    line-height: 0.9;
-    letter-spacing: -2px;
-    color: var(--light);
-  }
-
-  .intro-title span {
-    color: var(--primary);
-    display: block;
-  }
-
-  .intro-sub {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: clamp(14px, 2vw, 20px);
-    font-weight: 300;
-    color: rgba(255,255,255,0.55);
-    margin-top: 24px;
-    letter-spacing: 1px;
-  }
-
-  .intro-sub strong {
-    color: var(--secondary);
-    font-weight: 500;
-  }
-
+  .intro-title       { font-family: 'Bebas Neue',sans-serif; font-size: clamp(80px,14vw,180px); line-height: .9; letter-spacing: -2px; }
+  .intro-title span  { color: var(--primary); display: block; }
+  .intro-sub         { font-size: clamp(14px,2vw,20px); font-weight: 300; color: rgba(255,255,255,.55); margin-top: 24px; letter-spacing: 1px; }
+  .intro-sub strong  { color: var(--secondary); font-weight: 500; }
   .scroll-hint {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0.5;
-    animation: bounce 2s ease-in-out infinite;
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: .5; animation: bounce 2s ease-in-out infinite;
   }
-
-  .scroll-hint span {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    font-family: 'Montserrat', sans-serif;
-    color: var(--secondary);
-  }
-
-  .scroll-arrow {
-    width: 20px; height: 20px;
-    border-right: 2px solid var(--secondary);
-    border-bottom: 2px solid var(--secondary);
-    transform: rotate(45deg);
-  }
-
+  .scroll-hint span { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-family: 'Montserrat',sans-serif; color: var(--secondary); }
+  .scroll-arrow { width: 20px; height: 20px; border-right: 2px solid var(--secondary); border-bottom: 2px solid var(--secondary); transform: rotate(45deg); }
   @keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(8px); }
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(8px); }
   }
+  #introCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 
   /* ── SECTION 2: HOW IT WORKS ── */
-  #how {
-    background: var(--light);
-    color: var(--dark);
-    flex-direction: column;
-    padding: 60px 40px;
-  }
-
-  .section-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(42px, 7vw, 80px);
-    line-height: 1;
-    text-align: center;
-    margin-bottom: 60px;
-    color: var(--dark);
-  }
-
+  #how { background: var(--light); color: var(--dark); flex-direction: column; padding: 60px 40px; }
+  .section-label { font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; text-align: center; }
+  .section-title { font-family: 'Bebas Neue',sans-serif; font-size: clamp(42px,7vw,80px); line-height: 1; text-align: center; margin-bottom: 60px; color: var(--dark); }
   .steps-container {
-    display: flex;
-    gap: 0;
-    max-width: 900px;
-    width: 100%;
-    position: relative;
-    z-index: 1;
+    display: flex; gap: 0; max-width: 900px; width: 100%;
+    position: relative; z-index: 1;
   }
-
-  /* 연결선: 큰 원(56px) 중심 기준 정렬 */
   .steps-container::before {
-    content: '';
-    position: absolute;
-    top: 28px;
-    left: 12.5%;
-    right: 12.5%;
-    height: 2px;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    z-index: 0;
+    content: ''; position: absolute; top: 28px; left: 12.5%; right: 12.5%;
+    height: 2px; background: linear-gradient(to right, var(--primary), var(--secondary)); z-index: 0;
   }
-
-  /* 배달 트럭 애니메이션 */
-  .truck-track {
-    position: absolute;
-    top: 28px;
-    left: calc(12.5% + 28px);
-    width: calc(75% - 56px);
-    height: 0;
-    overflow: visible;
-    pointer-events: none;
-    z-index: 3;
-  }
-  .truck-anim {
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translate(-50%, -50%);
-    font-size: 22px;
-    line-height: 1;
-    animation: truckRide 6s cubic-bezier(.4,0,.6,1) infinite, truckGlow 1.8s ease-in-out infinite;
-    pointer-events: auto;
-    cursor: grab;
-    user-select: none;
-  }
-  @keyframes truckGlow {
-    0%,100% { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15)); }
-    50%      { filter: drop-shadow(0 0 14px rgba(242,100,25,0.85)); }
-  }
-  @keyframes truckRide {
-    0%   { left: 0%;    opacity: 1; }
-    78%  { left: 100%;  opacity: 1; }
-    86%  { left: 100%;  opacity: 0; }
-    87%  { left: 0%;    opacity: 0; }
-    94%  { left: 0%;    opacity: 1; }
-    100% { left: 0%;    opacity: 1; }
-  }
-
-  .step {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0 20px;
-    position: relative;
-    z-index: 1;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.6s ease;
-  }
-
-  .step.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .step:nth-child(2) { transition-delay: 0.15s; }
-  .step:nth-child(3) { transition-delay: 0.3s; }
-  .step:nth-child(4) { transition-delay: 0.45s; }
-
-  /* 아이콘 원형 뱃지 */
-  .step-icon {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: rgba(134,187,216,0.15);
-    border: 2px solid var(--secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 1;
-    font-size: 24px;
-    line-height: 1;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .step-icon.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    box-shadow: 0 4px 18px rgba(242,100,25,0.32);
-  }
-  .step-icon:hover { transform: scale(1.12); }
-
-  .step-num {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--primary);
-    margin-bottom: 8px;
-  }
-
-  .step h3 {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: var(--dark);
-  }
-
-  .step p {
-    font-size: 15px;
-    color: rgba(26,26,26,0.82);
-    line-height: 1.65;
-    font-weight: 400;
-  }
+  /* Delivery truck */
+  .truck-track { position: absolute; top: 28px; left: calc(12.5% + 28px); width: calc(75% - 56px); height: 0; overflow: visible; pointer-events: none; z-index: 3; }
+  .truck-anim  { position: absolute; left: 0; top: 0; transform: translate(-50%,-50%); font-size: 22px; line-height: 1; animation: truckRide 6s cubic-bezier(.4,0,.6,1) infinite, truckGlow 1.8s ease-in-out infinite; pointer-events: auto; cursor: grab; user-select: none; }
+  @keyframes truckGlow  { 0%,100% { filter: drop-shadow(0 2px 6px rgba(0,0,0,.15)); } 50% { filter: drop-shadow(0 0 14px rgba(242,100,25,.85)); } }
+  @keyframes truckRide  { 0%{left:0%;opacity:1} 78%{left:100%;opacity:1} 86%{left:100%;opacity:0} 87%{left:0%;opacity:0} 94%{left:0%;opacity:1} 100%{left:0%;opacity:1} }
+  .step { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; position: relative; z-index: 1; opacity: 0; transform: translateY(30px); transition: all .6s ease; }
+  .step.visible { opacity: 1; transform: translateY(0); }
+  .step:nth-child(2) { transition-delay: .15s; }
+  .step:nth-child(3) { transition-delay: .3s; }
+  .step:nth-child(4) { transition-delay: .45s; }
+  .step-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(134,187,216,.15); border: 2px solid var(--secondary); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; z-index: 1; font-size: 24px; line-height: 1; transition: transform .3s, box-shadow .3s; }
+  .step-icon.active { background: var(--primary); border-color: var(--primary); box-shadow: 0 4px 18px rgba(242,100,25,.32); }
+  .step-icon:hover  { transform: scale(1.12); }
+  .step-num { font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--primary); margin-bottom: 8px; }
+  .step h3  { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
+  .step p   { font-size: 15px; color: rgba(26,26,26,.82); line-height: 1.65; }
+  #how .section-label, #how .steps-container { position: relative; z-index: 1; }
+  #how .section-title { z-index: 1; }
 
   /* ── SECTION 3: REVIEWS ── */
-  #reviews {
-    background: #111;
-    flex-direction: column;
-    padding: 60px 40px;
-  }
-
+  #reviews { background: #111; flex-direction: column; padding: 60px 0; }
   #reviews .section-title { color: var(--light); }
 
-  /* 가로 스크롤 외부 래퍼 — 엣지 페이드 */
-  .reviews-scroll-outer {
-    width: 100%;
-    max-width: 1140px;
-    overflow: hidden;
-    position: relative;
+  /* Carousel wrapper — section의 overflow:hidden이 카드 클리핑 담당 */
+  .carousel-wrapper {
+    position: relative; width: 100%;
+    display: flex; align-items: center; justify-content: center;
     z-index: 1;
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 13%, black 87%, transparent 100%);
-    mask-image:         linear-gradient(to right, transparent 0%, black 13%, black 87%, transparent 100%);
   }
-
-  .reviews-grid {
-    display: flex;
-    gap: 20px;
-    padding: 12px 60px;
-    transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  .carousel-track {
+    display: flex; gap: 24px; padding: 20px 0;
+    transition: transform .65s cubic-bezier(.4,0,.2,1);
     will-change: transform;
   }
 
+  /* Arrow buttons */
+  .carousel-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 10; width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    color: rgba(255,255,255,.8); font-size: 30px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: none; user-select: none; -webkit-user-select: none;
+    transition: background .22s, border-color .22s, color .22s, opacity .22s;
+  }
+  .carousel-arrow:hover    { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .carousel-arrow:disabled { opacity: .2; pointer-events: none; }
+  .carousel-prev { left: 24px; }
+  .carousel-next { right: 24px; }
+
+  /* Review cards — opacity/transform은 JS가 인라인으로 제어 */
   .review-card {
-    width: 300px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 28px;
-    position: relative;
-    transition: border-color 0.3s ease, background 0.3s ease, opacity 0.5s ease, transform 0.5s ease;
-    opacity: 0;
-    transform: translateY(20px);
+    width: 300px; flex-shrink: 0; display: flex; flex-direction: column;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px; padding: 28px; position: relative;
+    transition: border-color .3s, background .3s, opacity .5s ease, transform .5s ease;
+    will-change: opacity, transform;
   }
-
-  .review-card.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .review-card:nth-child(2) { transition-delay: 0.07s; }
-  .review-card:nth-child(3) { transition-delay: 0.14s; }
-  .review-card:nth-child(4) { transition-delay: 0.21s; }
-  .review-card:nth-child(5) { transition-delay: 0.28s; }
-  .review-card:nth-child(6) { transition-delay: 0.35s; }
-  .review-card:nth-child(7) { transition-delay: 0.42s; }
-  .review-card:nth-child(8) { transition-delay: 0.49s; }
-
-  .review-card:hover {
-    border-color: rgba(242,100,25,0.4);
-    background: rgba(242,100,25,0.05);
-    transform: translateY(-4px);
-  }
-
-  .review-quote {
-    font-size: 40px;
-    color: var(--primary);
-    font-family: 'Bebas Neue', sans-serif;
-    line-height: 1;
-    margin-bottom: 12px;
-  }
-
-  .review-text {
-    font-size: 14px;
-    line-height: 1.7;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 16px;
-    font-weight: 300;
-    flex: 1;
-  }
-
-  .review-likes {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 14px;
-    background: rgba(255, 90, 90, 0.1);
-    border: 1px solid rgba(255, 90, 90, 0.22);
-    border-radius: 100px;
-    padding: 4px 12px 4px 10px;
-    transition: background 0.2s;
-  }
-  .review-card:hover .review-likes {
-    background: rgba(255, 90, 90, 0.18);
-  }
-  .review-likes-icon {
-    font-size: 14px;
-    line-height: 1;
-  }
-  .review-likes-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #ff6b6b;
-  }
-  .review-likes-count {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ff6b6b;
-  }
-
-  .review-keywords {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
-    min-height: 28px;
-  }
-  .kw-chip {
-    background: rgba(134, 187, 216, 0.1);
-    border: 1px solid rgba(134, 187, 216, 0.22);
-    color: rgba(134, 187, 216, 0.85);
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-family: 'Montserrat', sans-serif;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    cursor: default;
-  }
-
-  .review-author {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .review-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: 'Montserrat', sans-serif;
-  }
-
-  .review-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--light);
-  }
-
-  .review-meta {
-    font-size: 11px;
-    color: rgba(255,255,255,0.35);
-    margin-top: 2px;
-  }
+  .review-card:hover { border-color: rgba(242,100,25,.4); background: rgba(242,100,25,.05); }
+  .review-card:hover .review-likes { background: rgba(255,90,90,.18); }
+  .review-quote   { font-size: 40px; color: var(--primary); font-family: 'Bebas Neue',sans-serif; line-height: 1; margin-bottom: 12px; }
+  .review-text    { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,.7); margin-bottom: 16px; font-weight: 300; flex: 1; }
+  .review-likes   { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; background: rgba(255,90,90,.1); border: 1px solid rgba(255,90,90,.22); border-radius: 100px; padding: 4px 12px 4px 10px; transition: background .2s; }
+  .review-likes-icon  { font-size: 14px; line-height: 1; }
+  .review-likes-label { font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #ff6b6b; }
+  .review-likes-count { font-family: 'Montserrat',sans-serif; font-size: 13px; font-weight: 700; color: #ff6b6b; }
+  .review-keywords { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; min-height: 28px; }
+  .kw-chip { background: rgba(134,187,216,.1); border: 1px solid rgba(134,187,216,.22); color: rgba(134,187,216,.85); font-size: 11px; padding: 3px 10px; border-radius: 100px; font-family: 'Montserrat',sans-serif; letter-spacing: .3px; white-space: nowrap; user-select: none; -webkit-user-select: none; cursor: default; }
+  .review-author { display: flex; align-items: center; gap: 12px; }
+  .review-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; font-family: 'Montserrat',sans-serif; }
+  .review-name   { font-size: 13px; font-weight: 500; }
+  .review-meta   { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
 
   /* ── SECTION 4: CTA ── */
-  #cta {
-    background: var(--primary);
-    flex-direction: column;
-    text-align: center;
-    padding: 40px;
+  #cta { background: var(--primary); flex-direction: column; text-align: center; padding: 40px; }
+  .cta-tag   { font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 5px; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 20px; }
+  .cta-title { font-family: 'Bebas Neue',sans-serif; font-size: clamp(60px,11vw,140px); line-height: .9; color: white; margin-bottom: 8px; }
+  .cta-sub   { font-size: clamp(15px,2vw,20px); color: rgba(255,255,255,.75); font-weight: 300; margin-bottom: 50px; letter-spacing: .5px; }
+  .cta-btn   {
+    display: inline-block; background: white; color: var(--primary);
+    font-family: 'Montserrat',sans-serif; font-size: 16px; font-weight: 900;
+    letter-spacing: 3px; text-transform: uppercase; padding: 20px 60px;
+    border-radius: 100px; border: none; cursor: none; transition: all .3s;
+    text-decoration: none; position: relative; overflow: hidden;
   }
-
-  .cta-tag {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 20px;
-  }
-
-  .cta-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(60px, 11vw, 140px);
-    line-height: 0.9;
-    color: white;
-    margin-bottom: 8px;
-  }
-
-  .cta-sub {
-    font-size: clamp(15px, 2vw, 20px);
-    color: rgba(255,255,255,0.75);
-    font-weight: 300;
-    margin-bottom: 50px;
-    letter-spacing: 0.5px;
-  }
-
-  .cta-btn {
-    display: inline-block;
-    background: white;
-    color: var(--primary);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 20px 60px;
-    border-radius: 100px;
-    border: none;
-    cursor: none;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .cta-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--dark);
-    transform: translateX(-100%);
-    transition: transform 0.4s ease;
-    border-radius: 100px;
-  }
-
+  .cta-btn::before { content: ''; position: absolute; inset: 0; background: var(--dark); transform: translateX(-100%); transition: transform .4s; border-radius: 100px; }
   .cta-btn:hover::before { transform: translateX(0); }
+  .cta-btn span         { position: relative; z-index: 1; transition: color .4s; }
+  .cta-btn:hover span   { color: white; }
+  .cta-disclaimer { margin-top: 24px; font-size: 12px; color: rgba(255,255,255,.45); }
+  .cta-accent     { position: absolute; font-family: 'Bebas Neue',sans-serif; font-size: clamp(100px,20vw,280px); color: rgba(255,255,255,.06); white-space: nowrap; pointer-events: none; bottom: -20px; left: 50%; transform: translateX(-50%); letter-spacing: -4px; }
+  #cta .cta-tag, #cta .cta-title, #cta .cta-sub, #cta .cta-btn, #cta .cta-disclaimer { position: relative; z-index: 1; }
+  #cta .cta-accent { z-index: 1; }
 
-  .cta-btn span {
-    position: relative;
-    z-index: 1;
-    transition: color 0.4s ease;
-  }
+  /* ── Section canvases ── */
+  .section-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 
-  .cta-btn:hover span { color: white; }
-
-  .cta-disclaimer {
-    margin-top: 24px;
-    font-size: 12px;
-    color: rgba(255,255,255,0.45);
-  }
-
-  .cta-accent {
-    position: absolute;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(100px, 20vw, 280px);
-    color: rgba(255,255,255,0.06);
-    white-space: nowrap;
-    pointer-events: none;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    letter-spacing: -4px;
-  }
-
-  /* ── 섹션 캔버스 (배경 파티클) ── */
-  .section-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* 섹션 콘텐츠는 캔버스 위에 렌더링 */
-  #how .section-label,
-  #how .steps-container { position: relative; z-index: 1; }
-  #how .section-title   { z-index: 1; } /* inline position:absolute 유지 */
-  #reviews .reviews-grid { position: relative; z-index: 1; }
-  #cta .cta-tag, #cta .cta-title, #cta .cta-sub,
-  #cta .cta-btn, #cta .cta-disclaimer { position: relative; z-index: 1; }
-  #cta .cta-accent { z-index: 1; } /* already position:absolute */
-
-  /* ── MOBILE ── */
-  @media (max-width: 768px) {
-    .steps-container {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 28px;
-    }
-    .steps-container::before { display: none; }
-    .step { flex-direction: row; text-align: left; }
-    .step-check { flex-shrink: 0; }
-    .reviews-scroll-outer { -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent); mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent); }
-    .review-card { width: 260px; }
-  }
-
-  /* ── Intro Canvas ── */
-  #introCanvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── Easter Egg ── */
-  @keyframes carrotFall {
-    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-    80%  { opacity: 0.8; }
-    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-  }
-  @keyframes toastIn {
-    from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-    to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
-  }
+  /* ── Easter egg ── */
+  @keyframes carrotFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 80%{opacity:.8} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+  @keyframes toastIn    { from{transform:translateX(-50%) translateY(20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
   #easterToast {
-    position: fixed;
-    bottom: 48px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--primary);
-    color: white;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px;
-    letter-spacing: 3px;
-    padding: 16px 40px;
-    border-radius: 100px;
-    z-index: 9991;
-    white-space: nowrap;
-    box-shadow: 0 8px 32px rgba(242,100,25,.5);
+    position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+    background: var(--primary); color: white; font-family: 'Bebas Neue',sans-serif;
+    font-size: 24px; letter-spacing: 3px; padding: 16px 40px; border-radius: 100px;
+    z-index: 9991; white-space: nowrap; box-shadow: 0 8px 32px rgba(242,100,25,.5);
     animation: toastIn .4s ease forwards;
   }
-</style>
-</head>
-<body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-follower" id="follower"></div>
+  /* ── Auth Modal ── */
+  .auth-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 1100; backdrop-filter: blur(6px); }
+  .auth-modal   { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 1200; width: min(440px,92vw); }
+  .auth-overlay.open, .auth-modal.open { display: block !important; }
+  .auth-card  { background: rgba(18,18,18,.97); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 36px 40px; position: relative; box-shadow: 0 32px 80px rgba(0,0,0,.7); }
+  .auth-close { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.08); border: none; color: rgba(255,255,255,.5); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+  .auth-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+  .auth-tabs  { display: flex; margin-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .auth-tab   { flex: 1; padding: 10px; background: none; border: none; color: rgba(255,255,255,.4); font-family: 'Montserrat',sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .18s; }
+  .auth-tab.active { color: #F26419; border-bottom-color: #F26419; }
+  .auth-panel { display: none; }
+  .auth-panel.active { display: block; }
+  .auth-group { margin-bottom: 18px; }
+  .auth-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 7px; font-family: 'Montserrat',sans-serif; }
+  .auth-input { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 9px; padding: 13px 16px; color: #fafafa; font-family: 'Noto Sans KR',sans-serif; font-size: 14px; outline: none; transition: all .2s; }
+  .auth-input:focus { border-color: rgba(242,100,25,.5); background: rgba(255,255,255,.08); box-shadow: 0 0 0 3px rgba(242,100,25,.1); }
+  .auth-btn  { width: 100%; background: #F26419; color: #fff; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; padding: 15px; border-radius: 100px; border: none; cursor: pointer; transition: background .2s; margin-top: 4px; }
+  .auth-btn:hover { background: #d9540f; }
+  .auth-hint { font-size: 12px; color: rgba(255,255,255,.3); margin-top: 14px; text-align: center; }
+  .auth-hint a { color: #86BBD8; text-decoration: none; cursor: pointer; }
+  .auth-hint a:hover { text-decoration: underline; }
 
-{% include '당근마켓/_navbar.html' %}
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .steps-container { flex-direction: column; align-items: flex-start; gap: 28px; }
+    .steps-container::before { display: none; }
+    .step { flex-direction: row; text-align: left; }
+    .review-card { width: 240px; }
+    .carousel-arrow { width: 38px; height: 38px; font-size: 22px; }
+    .carousel-prev { left: 8px; }
+    .carousel-next { right: 8px; }
+  }
+{% endblock %}
+
+{% block content %}
 
 <!-- SECTION 1: INTRO -->
 <section id="intro">
@@ -708,7 +271,7 @@
     <div class="step" data-animate>
       <div class="step-icon active">🏪</div>
       <div class="step-num">STEP 03</div>
-      <h3>판매 & 정산</h3>
+      <h3>판매 &amp; 정산</h3>
       <p>저희가 직접 판매하고 소정의 수수료를 제외한 수익을 돌려드립니다</p>
     </div>
     <div class="step" data-animate>
@@ -717,7 +280,6 @@
       <h3>수익 수령</h3>
       <p>그냥 기다리기만 하세요. 판매 완료 후 정산금이 입금됩니다</p>
     </div>
-    <!-- 배달 트럭 애니메이션 -->
     <div class="truck-track" aria-hidden="true">
       <span class="truck-anim">🚚</span>
     </div>
@@ -729,154 +291,111 @@
   <canvas class="section-canvas" id="reviewsCanvas"></canvas>
   <div class="section-label" style="color:var(--secondary);position:absolute;top:12%;z-index:1;">Real Reviews</div>
   <h2 class="section-title" style="position:absolute;top:18%;z-index:1;">이용 후기</h2>
-  <div class="reviews-scroll-outer">
-    <div class="reviews-grid" id="reviewsGrid">
 
-      <div class="review-card" data-animate>
+  <div class="carousel-wrapper" id="reviewsWrapper">
+    <button class="carousel-arrow carousel-prev" id="reviewsPrev">&#8249;</button>
+
+    <div class="carousel-track" id="reviewsTrack">
+
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">217</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">217</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>무료나눔하고자 하면 피곤하고 팔려고 하자니 네고 때문에 당근마켓이 힘들었는데, 대신 팔아주고 수수료만 내면 되니 편해요.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#444;color:white;">이</div>
-          <div>
-            <div class="review-name">이수연 님</div>
-            <div class="review-meta">인천 연수구 · 2026년 1월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#444;color:white;">이</div><div><div class="review-name">이수연 님</div><div class="review-meta">인천 연수구 · 2026년 1월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">142</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">142</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>집에 있던 안 쓰는 짐들을 처리하려다 그냥 버리려고 했는데, 여기 맡겼더니 수익까지 돌아왔어요. 진짜 신기한 경험이었습니다.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:var(--primary);color:white;">김</div>
-          <div>
-            <div class="review-name">김민지 님</div>
-            <div class="review-meta">서울 마포구 · 2025년 11월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:var(--primary);color:white;">김</div><div><div class="review-name">김민지 님</div><div class="review-meta">서울 마포구 · 2025년 11월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">203</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">203</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>처음엔 반신반의했는데 실제로 정산금이 들어오고 나서 완전 신뢰하게 됐어요. 주변 지인들한테도 많이 추천했습니다.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#6C63FF;color:white;">오</div>
-          <div>
-            <div class="review-name">오미래 님</div>
-            <div class="review-meta">서울 강남구 · 2026년 1월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#6C63FF;color:white;">오</div><div><div class="review-name">오미래 님</div><div class="review-meta">서울 강남구 · 2026년 1월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">156</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">156</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>이사하면서 짐이 너무 많아서 고민이었는데, 한 번에 수거해가고 각각 판매 처리해줘서 정말 편했어요. 이삿날 스트레스가 반으로 줄었어요.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#F26419;color:white;">정</div>
-          <div>
-            <div class="review-name">정유나 님</div>
-            <div class="review-meta">경기 수원 · 2025년 12월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#F26419;color:white;">정</div><div><div class="review-name">정유나 님</div><div class="review-meta">경기 수원 · 2025년 12월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">89</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">89</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>당근마켓에 올려도 연락이 없어서 포기하던 물건들이 여기선 팔리더라고요. 직접 거래 안 해도 되니까 너무 편해요.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:var(--secondary);color:white;">박</div>
-          <div>
-            <div class="review-name">박성훈 님</div>
-            <div class="review-meta">경기 성남 · 2025년 12월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:var(--secondary);color:white;">박</div><div><div class="review-name">박성훈 님</div><div class="review-meta">경기 성남 · 2025년 12월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">91</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">91</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>아이 장난감이랑 옷 정리하면서 쌓아두기만 했는데, 수거 다음 날 바로 판매 진행 문자가 왔어요. 빠른 처리가 정말 마음에 들었어요.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#48C78E;color:white;">강</div>
-          <div>
-            <div class="review-name">강민서 님</div>
-            <div class="review-meta">부산 해운대구 · 2026년 2월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#48C78E;color:white;">강</div><div><div class="review-name">강민서 님</div><div class="review-meta">부산 해운대구 · 2026년 2월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">64</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">64</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>판매 금액이 얼마나 될지 몰라서 걱정했는데 생각보다 훨씬 많이 받았어요. 수수료 제하고도 충분히 만족스러운 금액이 들어왔습니다.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#FFD166;color:#1a1a1a;">최</div>
-          <div>
-            <div class="review-name">최재현 님</div>
-            <div class="review-meta">대구 수성구 · 2026년 1월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#FFD166;color:#1a1a1a;">최</div><div><div class="review-name">최재현 님</div><div class="review-meta">대구 수성구 · 2026년 1월</div></div></div>
       </div>
 
-      <div class="review-card" data-animate>
+      <div class="review-card">
         <div class="review-quote">"</div>
-        <div class="review-likes">
-          <span class="review-likes-icon">❤️</span>
-          <span class="review-likes-count">38</span>
-          <span class="review-likes-label">좋아요</span>
-        </div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">38</span><span class="review-likes-label">좋아요</span></div>
         <p class="review-text" data-review>직접 올리고 연락 기다리고 만나고… 그 과정이 너무 귀찮아서 항상 포기했는데. 맡기고 기다리면 된다는 게 진짜 획기적이에요.</p>
         <div class="review-keywords"></div>
-        <div class="review-author">
-          <div class="review-avatar" style="background:#86BBD8;color:white;">한</div>
-          <div>
-            <div class="review-name">한동준 님</div>
-            <div class="review-meta">광주 북구 · 2026년 2월</div>
-          </div>
-        </div>
+        <div class="review-author"><div class="review-avatar" style="background:#86BBD8;color:white;">한</div><div><div class="review-name">한동준 님</div><div class="review-meta">광주 북구 · 2026년 2월</div></div></div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">73</span><span class="review-likes-label">좋아요</span></div>
+        <p class="review-text" data-review>아이 돌봄 기구들이 너무 많이 쌓여서 고민이었는데, 수거 왔을 때 꼼꼼하게 상태 확인해주시는 모습에 신뢰가 갔어요. 믿고 맡길 수 있었습니다.</p>
+        <div class="review-keywords"></div>
+        <div class="review-author"><div class="review-avatar" style="background:#E040FB;color:white;">강</div><div><div class="review-name">강지현 님</div><div class="review-meta">서울 양천구 · 2026년 1월</div></div></div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">115</span><span class="review-likes-label">좋아요</span></div>
+        <p class="review-text" data-review>가전제품이 여러 개라 혼자 거래하기 힘들었는데, 한 번에 전부 맡기니 너무 편했어요. 각 물건별로 판매 현황을 알려줘서 더 좋았습니다.</p>
+        <div class="review-keywords"></div>
+        <div class="review-author"><div class="review-avatar" style="background:#00BCD4;color:white;">윤</div><div><div class="review-name">윤성민 님</div><div class="review-meta">대전 유성구 · 2026년 2월</div></div></div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">49</span><span class="review-likes-label">좋아요</span></div>
+        <p class="review-text" data-review>소파랑 침대를 나눔하려다 운반이 문제여서 포기했는데, 수거까지 해주시니 가구 정리가 단번에 해결됐어요. 수익도 챙겼고 집도 넓어졌습니다.</p>
+        <div class="review-keywords"></div>
+        <div class="review-author"><div class="review-avatar" style="background:#8D6E63;color:white;">임</div><div><div class="review-name">임도현 님</div><div class="review-meta">경기 고양시 · 2026년 1월</div></div></div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-likes"><span class="review-likes-icon">❤️</span><span class="review-likes-count">31</span><span class="review-likes-label">좋아요</span></div>
+        <p class="review-text" data-review>옷들이 너무 많이 쌓였는데 일일이 사진 찍고 올리기가 귀찮았거든요. 박스에 담아 내놓으니 알아서 다 처리해줘서 정말 좋았어요.</p>
+        <div class="review-keywords"></div>
+        <div class="review-author"><div class="review-avatar" style="background:#F06292;color:white;">송</div><div><div class="review-name">송하영 님</div><div class="review-meta">부산 사하구 · 2026년 2월</div></div></div>
       </div>
 
     </div>
+
+    <button class="carousel-arrow carousel-next" id="reviewsNext">&#8250;</button>
   </div>
 </section>
 
@@ -891,91 +410,23 @@
   <p class="cta-disclaimer">신청은 무료이며, 판매 성사 시에만 수수료가 발생합니다.</p>
 </section>
 
-<!-- ── Footer ── -->
-<footer style="
-  background: rgba(10,10,10,0.95);
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding: 28px 32px;
-  text-align: center;
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 13px;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.3px;
-">
+<!-- Footer -->
+<footer style="background:rgba(10,10,10,.95); border-top:1px solid rgba(255,255,255,.06); padding:28px 32px; text-align:center; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:rgba(255,255,255,.35); letter-spacing:.3px; scroll-snap-align:start;">
   관련 문의 (연락처) :
-  <a href="mailto:qorwlsdn31@daum.net" style="
-    color: rgba(242,100,25,0.75);
-    text-decoration: none;
-    transition: color 0.2s;
-  " onmouseover="this.style.color='#F26419'" onmouseout="this.style.color='rgba(242,100,25,0.75)'">
-    qorwlsdn31@daum.net
-  </a>
+  <a href="mailto:qorwlsdn31@daum.net" class="footer-email">qorwlsdn31@daum.net</a>
 </footer>
 
-<!-- ── Auth Modal ── -->
-<div id="authOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1100; backdrop-filter:blur(6px);" class="auth-overlay"></div>
-<div id="authModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1200; width:min(440px,92vw);" class="auth-modal">
-  <style>
-    .auth-overlay.open { display:block !important; }
-    .auth-modal.open   { display:block !important; }
-    .auth-card {
-      background:rgba(18,18,18,.97); border:1px solid rgba(255,255,255,.1);
-      border-radius:20px; padding:36px 40px; position:relative;
-      box-shadow:0 32px 80px rgba(0,0,0,.7);
-    }
-    .auth-close {
-      position:absolute; top:16px; right:16px;
-      width:28px; height:28px; border-radius:50%;
-      background:rgba(255,255,255,.08); border:none; color:rgba(255,255,255,.5);
-      font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-      transition:background .2s;
-    }
-    .auth-close:hover { background:rgba(255,255,255,.15); color:#fff; }
-    .auth-tabs { display:flex; gap:0; margin-bottom:28px; border-bottom:1px solid rgba(255,255,255,.08); }
-    .auth-tab {
-      flex:1; padding:10px; background:none; border:none; color:rgba(255,255,255,.4);
-      font-family:'Montserrat',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.5px;
-      text-transform:uppercase; cursor:pointer; border-bottom:2px solid transparent;
-      margin-bottom:-1px; transition:all .18s;
-    }
-    .auth-tab.active { color:#F26419; border-bottom-color:#F26419; }
-    .auth-panel { display:none; }
-    .auth-panel.active { display:block; }
-    .auth-group { margin-bottom:18px; }
-    .auth-label {
-      display:block; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
-      color:rgba(255,255,255,.35); margin-bottom:7px; font-family:'Montserrat',sans-serif;
-    }
-    .auth-input {
-      width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-      border-radius:9px; padding:13px 16px; color:#fafafa;
-      font-family:'Noto Sans KR',sans-serif; font-size:14px; outline:none; transition:all .2s;
-    }
-    .auth-input:focus { border-color:rgba(242,100,25,.5); background:rgba(255,255,255,.08); box-shadow:0 0 0 3px rgba(242,100,25,.1); }
-    .auth-btn {
-      width:100%; background:#F26419; color:#fff; font-family:'Montserrat',sans-serif;
-      font-size:14px; font-weight:900; letter-spacing:2px; text-transform:uppercase;
-      padding:15px; border-radius:100px; border:none; cursor:pointer; transition:background .2s; margin-top:4px;
-    }
-    .auth-btn:hover { background:#d9540f; }
-    .auth-hint { font-size:12px; color:rgba(255,255,255,.3); margin-top:14px; text-align:center; }
-    .auth-hint a { color:#86BBD8; text-decoration:none; cursor:pointer; }
-    .auth-hint a:hover { text-decoration:underline; }
-    .auth-error {
-      background:rgba(242,100,25,.1); border:1px solid rgba(242,100,25,.3);
-      border-radius:8px; padding:10px 14px; font-size:13px; color:#F26419; margin-bottom:16px; display:none;
-    }
-  </style>
-
+<!-- Auth Modal -->
+<div id="authOverlay" class="auth-overlay"></div>
+<div id="authModal"   class="auth-modal">
   <div class="auth-card">
     <button class="auth-close" id="authClose">✕</button>
-
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="login">로그인</button>
-      <button class="auth-tab" data-tab="register">회원가입</button>
+      <button class="auth-tab"        data-tab="register">회원가입</button>
     </div>
 
-    <!-- Login -->
+    <!-- Login panel -->
     <div class="auth-panel active" data-panel="login">
       <form method="post" action="/customer/login">
         <div class="auth-group">
@@ -993,7 +444,7 @@
       </form>
     </div>
 
-    <!-- Register -->
+    <!-- Register panel -->
     <div class="auth-panel" data-panel="register">
       <form method="post" action="/customer/register">
         <div class="auth-group">
@@ -1022,122 +473,77 @@
 
   </div>
 </div>
+{% endblock %}
 
-<script>
-  // ── 공유 커서 초기화 ──
-  DanggnFX.initCursor();
+{% block page_js %}
+  /* ── Section canvas init (index는 섹션별 캔버스 사용) ── */
+  DanggnFX.createBgCanvas(document.getElementById('introCanvas'),   { fullscreen: false, orbCount: 7,  emberCount: 70 });
+  DanggnFX.createBgCanvas(document.getElementById('howCanvas'),     { fullscreen: false, orbCount: 4,  emberCount: 22, colorScheme: 'light' });
+  DanggnFX.createBgCanvas(document.getElementById('reviewsCanvas'), { fullscreen: false, orbCount: 6,  emberCount: 50 });
+  DanggnFX.createBgCanvas(document.getElementById('ctaCanvas'),     { fullscreen: false, orbCount: 5,  emberCount: 35, colorScheme: 'warm'  });
 
-  // Scroll-triggered animations
+  /* ── Scroll-triggered animations — [data-animate] 자식이 있는 섹션만 관찰 ── */
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        const items = e.target.querySelectorAll('[data-animate]');
-        items.forEach(el => el.classList.add('visible'));
+        e.target.querySelectorAll('[data-animate]').forEach(el => el.classList.add('visible'));
+        observer.unobserve(e.target); // 한 번 보이면 더 이상 관찰 불필요
       }
     });
-  }, { threshold: 0.3 });
+  }, { threshold: .3 });
+  document.querySelectorAll('section').forEach(s => {
+    if (s.querySelector('[data-animate]')) observer.observe(s);
+  });
 
-  document.querySelectorAll('section').forEach(s => observer.observe(s));
-
-  // ── Intro 섹션 Canvas ──
-  DanggnFX.createBgCanvas(
-    document.getElementById('introCanvas'),
-    { fullscreen: false, orbCount: 7, emberCount: 70 }
-  );
-
-  // ── Section 2 (#how) — 밝은 배경 저채도 파티클 ──
-  DanggnFX.createBgCanvas(
-    document.getElementById('howCanvas'),
-    { fullscreen: false, orbCount: 4, emberCount: 22, colorScheme: 'light' }
-  );
-
-  // ── Section 3 (#reviews) — 어두운 배경 ──
-  DanggnFX.createBgCanvas(
-    document.getElementById('reviewsCanvas'),
-    { fullscreen: false, orbCount: 6, emberCount: 50 }
-  );
-
-  // ── Section 4 (#cta) — 오렌지 배경 흰색 파티클 ──
-  DanggnFX.createBgCanvas(
-    document.getElementById('ctaCanvas'),
-    { fullscreen: false, orbCount: 5, emberCount: 35, colorScheme: 'warm' }
-  );
-
-  // ── Review keyword extractor ──
+  /* ── Review keyword extractor ── */
   (function initReviewKeywords() {
-    // 한국어 불용어 (조사·어미·부사·대명사 등 키워드 가치 낮은 토큰)
     const STOP = new Set([
-      // 조사·의존명사·연결어미 (독립 토큰으로 분리된 경우)
       '이','가','은','는','을','를','에','의','로','도','만','과','와','서','게',
       '에서','에게','한테','로부터','이나','이랑','이라도',
-      // 부사·감탄사
       '안','못','잘','좀','더','덜','다','꼭','또','그냥','너무','아주','매우',
       '진짜','정말','완전','특히','실제로','직접','바로','다시','함께','같이',
       '이미','벌써','여전히','더욱','그대로',
-      // 대명사
       '이게','저게','그게','이것','저것','그것','여기','저기','거기',
       '이거','저거','그거','우리','나는','저는','제가','저','나','제',
-      // 공통 서술형 어미 (공백으로 분리된 토큰)
       '있어요','없어요','됐어요','했어요','이에요','이었어요','됩니다','합니다',
       '있었는데','됐는데','했는데','이었는데','이었어요','였어요','였는데',
       '있는','없는','되는','하는','되고','있고','하고','있어서','없어서',
       '하면서','하면','해서','해도','되니까','되니','이니','이니까',
       '하고자','하자니','하려고','하려다','버리려고','처리하려다',
       '돌아왔어요','팔리더라고요','힘들었는데','맡겼더니','포기하던',
-      '경험이었습니다','편해요','편하고','피곤하고','힘들었는데',
-      // 접속사·의존어
+      '경험이었습니다','편해요','편하고','피곤하고',
       '그리고','그런데','하지만','그래서','그래도','그러나','또한','때문에',
       '위해서','통해서','대해서','이라서','이라고','이니까','이어서','따라서',
-      // 관형사·보조용언
       '있던','없던','쓰던','이런','그런','저런','어떤','모든','각각','이렇게',
       '쓰는','하는데','이었던','됐던','했던','했을',
-      // 기타 필터
       '여기선','거기선','저기선','이거야','저거야','그거야',
       '올려','내려','들어','나가','나와','들고','놓고','받고','주고',
     ]);
 
-    /**
-     * 텍스트에서 키워드 추출
-     * - 짧은 리뷰(50자 미만): 3개
-     * - 보통 리뷰(50~120자): 4~5개
-     * - 긴 리뷰(120자 이상): 5~10개
-     */
-    // 후행 조사·어미 제거 (최소 2글자 어근 유지)
     function stripParticle(w) {
-      const p2 = ['에서','에게','이나','이랑','이고','이며','만큼','처럼','이라','까지','부터',
-                  '하고자','하자니','이라도','이었어','에다','으로','이라서','이니까'];
+      const p2 = ['에서','에게','이나','이랑','이고','이며','만큼','처럼','이라','까지','부터','하고자','하자니','이라도','이었어','에다','으로','이라서','이니까'];
       for (const p of p2) {
         if (w.endsWith(p) && w.length > p.length + 1) return w.slice(0, -p.length);
       }
-      // 단일 조사 (끝 1자) — 결과가 1자 미만이 되어도 제거(이후 필터가 처리)
-      if ('을를이가은는에의도만로선'.includes(w[w.length - 1]) && w.length > 1)
-        return w.slice(0, -1);
+      if ('을를이가은는에의도만로선'.includes(w[w.length - 1]) && w.length > 1) return w.slice(0, -1);
       return w;
     }
 
     function extractKeywords(text) {
-      const clean = text.replace(/[.,!?~·"''""…\-]/g, ' ');
+      const clean  = text.replace(/[.,!?~·"''""…\-]/g, ' ');
       const tokens = clean.split(/\s+/)
-        .map(w => w.replace(/^[^가-힣]+|[^가-힣]+$/g, '')) // 앞뒤 비한글 제거
-        .map(stripParticle)                                  // 조사 제거
+        .map(w => w.replace(/^[^가-힣]+|[^가-힣]+$/g, ''))
+        .map(stripParticle)
         .filter(w => w.length >= 2 && /[가-힣]{2,}/.test(w) && !STOP.has(w));
-
-      // 빈도 집계
       const freq = {};
       tokens.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
-
-      // 길이 + 빈도 가중치 스코어 (긴 단어 = 명사 가능성 높음)
       const scored = Object.entries(freq)
         .map(([w, f]) => ({ w, s: w.length * 1.5 + f }))
         .sort((a, b) => b.s - a.s);
-
-      // 텍스트 길이 기반 목표 개수
-      const len = text.length;
+      const len  = text.length;
       const maxKw = len < 50 ? 3 : len < 120 ? 5 : 10;
       const minKw = len < 50 ? 3 : len < 120 ? 3 : 5;
-      const n = Math.min(maxKw, Math.max(minKw, scored.length));
-
-      return scored.slice(0, n).map(x => x.w);
+      return scored.slice(0, Math.min(maxKw, Math.max(minKw, scored.length))).map(x => x.w);
     }
 
     document.querySelectorAll('.review-card').forEach(card => {
@@ -1153,48 +559,24 @@
     });
   })();
 
-  // ── Phone formatter ──
-  function fmtPhone(el) {
-    const d = el.value.replace(/\D/g, '').slice(0, 11);
-    if (d.length <= 3)      el.value = d;
-    else if (d.length <= 7) el.value = d.slice(0,3) + '-' + d.slice(3);
-    else                    el.value = d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7);
-  }
-
-  // ── Auth Modal ──
+  /* ── Auth Modal ── */
   const authModal   = document.getElementById('authModal');
   const authOverlay = document.getElementById('authOverlay');
 
-  function openAuthModal(tab) {
-    authModal.classList.add('open');
-    authOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    switchAuthTab(tab || 'login');
-  }
-  function closeAuthModal() {
-    authModal.classList.remove('open');
-    authOverlay.classList.remove('open');
-    document.body.style.overflow = '';
-  }
+  function openAuthModal(tab)  { authModal.classList.add('open'); authOverlay.classList.add('open'); document.documentElement.style.overflowY = 'hidden'; switchAuthTab(tab || 'login'); }
+  function closeAuthModal()    { authModal.classList.remove('open'); authOverlay.classList.remove('open'); document.documentElement.style.overflowY = ''; }
   function switchAuthTab(name) {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.auth-tab').forEach(t  => t.classList.toggle('active',  t.dataset.tab   === name));
     document.querySelectorAll('.auth-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === name));
   }
 
   authOverlay?.addEventListener('click', closeAuthModal);
   document.getElementById('authClose')?.addEventListener('click', closeAuthModal);
-  document.querySelectorAll('.auth-tab').forEach(t => {
-    t.addEventListener('click', () => switchAuthTab(t.dataset.tab));
-  });
+  document.querySelectorAll('.auth-tab').forEach(t => t.addEventListener('click', () => switchAuthTab(t.dataset.tab)));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
+  document.getElementById('navLoginBtn')?.addEventListener('click', e => { e.preventDefault(); openAuthModal('login'); });
 
-  // 네브바 로그인 버튼 연결
-  document.getElementById('navLoginBtn')?.addEventListener('click', e => {
-    e.preventDefault(); openAuthModal('login');
-  });
-
-  // ── 🥕 Easter Egg ──
-  // 키보드: 코나미 코드 (↑↑↓↓←→←→BA)
+  /* ── 🥕 Easter Egg (Konami code + 7-tap) ── */
   const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
   let ki = 0;
   document.addEventListener('keydown', ev => {
@@ -1202,7 +584,6 @@
     if (ki === KONAMI.length) { ki = 0; triggerCarrotRain(); }
   });
 
-  // 모바일: 인트로 타이틀 7번 탭
   let tapCount = 0, tapTimer = null;
   document.querySelector('.intro-title')?.addEventListener('click', () => {
     tapCount++;
@@ -1212,10 +593,9 @@
   });
 
   let lastEasterTrigger = 0;
-
   function triggerCarrotRain() {
     const now = Date.now();
-    if (now - lastEasterTrigger < 30000) return; // 30초 쿨다운
+    if (now - lastEasterTrigger < 30000) return;
     lastEasterTrigger = now;
 
     const rain = document.createElement('div');
@@ -1231,206 +611,174 @@
     const symbols = ['🥕','🥕','🥕','💰','💸','🥕','💵','🥕','🏅','🥕','🥕','💎'];
     for (let i = 0; i < 55; i++) {
       setTimeout(() => {
-        const el = document.createElement('div');
+        const el   = document.createElement('div');
         el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-        const x    = (Math.random() * 96).toFixed(1);
-        const dur  = (1.8 + Math.random() * 2.2).toFixed(2);
+        const x   = (Math.random() * 96).toFixed(1);
+        const dur = (1.8 + Math.random() * 2.2).toFixed(2);
         const size = 20 + Math.floor(Math.random() * 32);
         const rot  = Math.floor(Math.random() * 360);
         el.style.cssText = `position:absolute;left:${x}%;top:-55px;font-size:${size}px;line-height:1;animation:carrotFall ${dur}s ease-in forwards;transform:rotate(${rot}deg);`;
         rain.appendChild(el);
       }, i * 55);
     }
-
     setTimeout(() => { rain.remove(); toast.remove(); }, 5500);
   }
 
-  // ── 리뷰 자동 가로 스크롤 ──
-  (function initReviewScroll() {
-    const outer = document.querySelector('.reviews-scroll-outer');
-    const grid  = document.getElementById('reviewsGrid');
-    if (!grid || !outer) return;
+  /* ── Review Carousel ── */
+  (function initCarousel() {
+    const wrapper = document.getElementById('reviewsWrapper');
+    const track   = document.getElementById('reviewsTrack');
+    const prevBtn = document.getElementById('reviewsPrev');
+    const nextBtn = document.getElementById('reviewsNext');
+    if (!track || !wrapper) return;
 
-    const GAP       = 20;
-    const CARD_W    = () => grid.querySelector('.review-card')?.offsetWidth || 300;
-    const INTERVAL  = 3200; // ms
-    const cards     = grid.querySelectorAll('.review-card');
-    const total     = cards.length;
-    let   idx       = 0;
-    let   paused    = false;
-    let   timer     = null;
+    const cards = [...track.querySelectorAll('.review-card')];
+    const total = cards.length;
+    const GAP   = 24;
+    let idx   = 2;   // 초기: 좌측 2장 peek
+    let timer = null;
 
-    function maxIdx() {
-      // 마지막에서 outer 너비만큼 보이는 카드 수 빼기
-      const visible = Math.floor(outer.offsetWidth / (CARD_W() + GAP));
-      return Math.max(0, total - visible);
+    // dist별 스타일: 0=중앙(선명), 1=인접(약간 흐림), 2=양끝(흐릿)
+    const STYLE = [
+      { opacity: '1',    transform: 'scale(1.04)' },
+      { opacity: '0.80', transform: 'scale(0.97)' },
+      { opacity: '0.28', transform: 'scale(0.88)' },
+    ];
+    const FALLBACK = { opacity: '0.05', transform: 'scale(0.82)' };
+
+    function cardW()  { return cards[0]?.offsetWidth || 300; }
+
+    function render() {
+      const cw  = cardW();
+      const off = window.innerWidth / 2 - idx * (cw + GAP) - cw / 2;
+      track.style.transform = `translateX(${off}px)`;
+      cards.forEach((card, i) => {
+        const s = STYLE[Math.abs(i - idx)] ?? FALLBACK;
+        card.style.opacity   = s.opacity;
+        card.style.transform = s.transform;
+      });
+      if (prevBtn) prevBtn.disabled = (idx === 0);
+      if (nextBtn) nextBtn.disabled = (idx === total - 1);
     }
 
-    function scrollTo(i) {
-      idx = Math.max(0, Math.min(i, maxIdx()));
-      grid.style.transform = `translateX(-${idx * (CARD_W() + GAP)}px)`;
+    function go(delta) {
+      idx = Math.max(0, Math.min(total - 1, idx + delta));
+      render();
     }
 
-    function next() {
-      if (paused) return;
-      scrollTo(idx >= maxIdx() ? 0 : idx + 1);
+    function autoNext() {
+      if (idx >= total - 1) {
+        // 순환 wrap: 전환 없이 idx=0으로 순간이동 후 transition 복원
+        track.style.transition = 'none';
+        idx = 0;
+        render();
+        requestAnimationFrame(() => {
+          track.style.transition = '';
+        });
+      } else {
+        go(1);
+      }
     }
 
-    function startTimer() { timer = setInterval(next, INTERVAL); }
-    function stopTimer()  { clearInterval(timer); }
+    const startAuto = () => { timer = setInterval(autoNext, 3500); };
+    const stopAuto  = () => clearInterval(timer);
 
-    startTimer();
-    outer.addEventListener('mouseenter', () => { paused = true;  stopTimer(); });
-    outer.addEventListener('mouseleave', () => { paused = false; startTimer(); });
+    prevBtn?.addEventListener('click', () => go(-1));
+    nextBtn?.addEventListener('click', () => go(1));
+    wrapper.addEventListener('mouseenter', stopAuto);
+    wrapper.addEventListener('mouseleave', startAuto);
+
+    startAuto();
+    render();
+
+    // resize 디바운스 (120ms) — 급격한 resize 이벤트 폭탄 방지
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 120);
+    });
   })();
 
-  // ── 트럭 드래그 & 로켓 귀환 (ghost 방식) ──
+  /* ── Truck drag & rocket return (ghost approach) ── */
   (function initTruckDrag() {
     const truck = document.querySelector('.truck-anim');
     const track = document.querySelector('.truck-track');
     if (!truck || !track) return;
 
-    let ghost      = null;   // body에 붙는 고스트 엘리먼트
-    let isDragging = false;
-    let returning  = false;
-    let retFrame   = null;
-    let boostTimer = null;
-    let curX = 0, curY = 0;
-    let offX = 0, offY = 0;
-
-    // 커스텀 커서 피드백
+    let ghost = null, isDragging = false, returning = false, retFrame = null, boostTimer = null;
+    let curX = 0, curY = 0, offX = 0, offY = 0;
     const dotEl = document.getElementById('cursor');
+
     truck.addEventListener('mouseenter', () => { if (dotEl) dotEl.style.transform = 'scale(2.2)'; });
     truck.addEventListener('mouseleave', () => { if (dotEl && !isDragging) dotEl.style.transform = ''; });
 
-    // pointerdown — ghost 생성
     truck.addEventListener('pointerdown', e => {
       e.preventDefault();
       if (returning) cancelReturn();
-
-      const r = truck.getBoundingClientRect();
-      curX = r.left + r.width  / 2;
-      curY = r.top  + r.height / 2;
-      offX = e.clientX - curX;
-      offY = e.clientY - curY;
-
-      // ghost: body에 직접 붙여 overflow / z-index 문제 원천 차단
+      const r  = truck.getBoundingClientRect();
+      curX = r.left + r.width / 2; curY = r.top + r.height / 2;
+      offX = e.clientX - curX;     offY = e.clientY - curY;
       ghost = document.createElement('div');
       ghost.textContent = '🚚';
-      ghost.style.cssText = [
-        'position:fixed',
-        `left:${curX}px`,
-        `top:${curY}px`,
-        'font-size:26px',
-        'transform:translate(-50%,-50%) scale(1.35)',
-        'pointer-events:none',
-        'z-index:9995',
-        'user-select:none',
-        'transition:transform .12s',
-        'filter:drop-shadow(0 4px 14px rgba(242,100,25,0.7))',
-      ].join(';');
+      ghost.style.cssText = `position:fixed;left:${curX}px;top:${curY}px;font-size:26px;transform:translate(-50%,-50%) scale(1.35);pointer-events:none;z-index:9995;user-select:none;transition:transform .12s;filter:drop-shadow(0 4px 14px rgba(242,100,25,.7));`;
       document.body.appendChild(ghost);
-
-      // 원본 트럭 숨김
-      truck.style.opacity   = '0';
-      truck.style.animation = 'none';
+      truck.style.opacity = '0'; truck.style.animation = 'none';
       isDragging = true;
       if (dotEl) dotEl.style.transform = 'scale(2.2)';
-
       truck.setPointerCapture(e.pointerId);
     });
 
-    // pointermove
     truck.addEventListener('pointermove', e => {
       if (!isDragging || !ghost) return;
-      curX = e.clientX - offX;
-      curY = e.clientY - offY;
-      ghost.style.left = curX + 'px';
-      ghost.style.top  = curY + 'px';
+      curX = e.clientX - offX; curY = e.clientY - offY;
+      ghost.style.left = curX + 'px'; ghost.style.top = curY + 'px';
     });
 
-    // pointerup / pointercancel
     function onRelease() {
       if (!isDragging) return;
       isDragging = false;
       if (dotEl) dotEl.style.transform = '';
-      if (ghost) ghost.style.transform = 'translate(-50%,-50%) scale(1)';
+      if (ghost)  ghost.style.transform = 'translate(-50%,-50%) scale(1)';
       startReturn();
     }
     truck.addEventListener('pointerup',     onRelease);
     truck.addEventListener('pointercancel', onRelease);
 
-    // 귀환 목표: track의 시작점 (left edge, 수직 중앙)
-    function getTarget() {
-      const tr = track.getBoundingClientRect();
-      return { x: tr.left, y: tr.top };
-    }
+    function getTarget() { const tr = track.getBoundingClientRect(); return { x: tr.left, y: tr.top }; }
 
     function startReturn() {
       returning = true;
-      boostTimer = setInterval(() => {
-        if (!ghost) return;
-        const tgt = getTarget();
-        spawnBooster(curX, curY, tgt.x - curX, tgt.y - curY);
-      }, 45);
-
+      boostTimer = setInterval(() => { if (!ghost) return; const t = getTarget(); spawnBooster(curX, curY, t.x - curX, t.y - curY); }, 45);
       (function loop() {
-        const tgt  = getTarget();
-        const dx   = tgt.x - curX;
-        const dy   = tgt.y - curY;
-        const dist = Math.hypot(dx, dy);
+        const t = getTarget(), dx = t.x - curX, dy = t.y - curY, dist = Math.hypot(dx, dy);
         if (dist < 5) { finishReturn(); return; }
-        curX += dx * 0.14;
-        curY += dy * 0.14;
+        curX += dx * .14; curY += dy * .14;
         if (ghost) { ghost.style.left = curX + 'px'; ghost.style.top = curY + 'px'; }
         retFrame = requestAnimationFrame(loop);
       })();
     }
 
-    function cancelReturn() {
-      clearInterval(boostTimer);
-      cancelAnimationFrame(retFrame);
-      returning = false;
-      if (ghost) { ghost.remove(); ghost = null; }
-    }
-
-    function finishReturn() {
-      cancelReturn();
-      // 원본 트럭 복원
-      truck.style.opacity   = '';
-      truck.style.animation = '';
-    }
+    function cancelReturn() { clearInterval(boostTimer); cancelAnimationFrame(retFrame); returning = false; if (ghost) { ghost.remove(); ghost = null; } }
+    function finishReturn() { cancelReturn(); truck.style.opacity = ''; truck.style.animation = ''; }
 
     function spawnBooster(x, y, dx, dy) {
       const len    = Math.hypot(dx, dy) || 1;
-      const bx     = -(dx / len);
-      const by     = -(dy / len);
-      const emojis = ['🔥', '🔥', '✨', '💨', '⚡'];
+      const bx = -(dx / len), by = -(dy / len);
+      const emojis = ['🔥','🔥','✨','💨','⚡'];
       for (let i = 0; i < 2; i++) {
-        const p      = document.createElement('div');
-        const spread = (Math.random() - 0.5) * 28;
-        const dist   = 18 + Math.random() * 24;
-        const size   = 10 + Math.random() * 10;
-        p.style.cssText = [
-          'position:fixed',
-          `left:${x}px`, `top:${y}px`,
-          `font-size:${size}px`,
-          'pointer-events:none', 'z-index:9990',
-          'transform:translate(-50%,-50%)', 'opacity:1',
-          'transition:left .4s ease-out,top .4s ease-out,opacity .4s ease-out,transform .4s ease-out',
-        ].join(';');
+        const p = document.createElement('div');
+        const spread = (Math.random() - .5) * 28, dist = 18 + Math.random() * 24, size = 10 + Math.random() * 10;
+        p.style.cssText = `position:fixed;left:${x}px;top:${y}px;font-size:${size}px;pointer-events:none;z-index:9990;transform:translate(-50%,-50%);opacity:1;transition:left .4s ease-out,top .4s ease-out,opacity .4s ease-out,transform .4s ease-out;`;
         p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
         document.body.appendChild(p);
         requestAnimationFrame(() => {
           p.style.left      = (x + bx * dist + spread * Math.abs(by)) + 'px';
           p.style.top       = (y + by * dist + spread * Math.abs(bx)) + 'px';
           p.style.opacity   = '0';
-          p.style.transform = 'translate(-50%,-50%) scale(0.2)';
+          p.style.transform = 'translate(-50%,-50%) scale(.2)';
         });
         setTimeout(() => p.remove(), 420);
       }
     }
   })();
-</script>
-</body>
-</html>
+{% endblock %}

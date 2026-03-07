@@ -209,7 +209,7 @@
 
 
 <nav class="navbar">
-  <a href="{{ logo_href | default('#intro') }}" class="navbar-logo">
+  <a href="{{ logo_href | default('/danggn') }}" class="navbar-logo">
     <img src="/static/images/logo.png" alt="SELL IT 로고">
   </a>
   <a href="/admin/login" class="navbar-admin-demo">admin 견본용</a>
@@ -224,7 +224,6 @@
         <a href="/danggn/reviews"><span class="dd-icon">📋</span>이용후기 목록</a>
       </div>
     </li>
-    <li><a href="#faq">FAQ</a></li>
     {% if request.session.get('user_id') %}
     <li class="has-dropdown">
       <a href="/customer/profile">내 계정 <span class="dropdown-arrow">▾</span></a>

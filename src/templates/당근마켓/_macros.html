@@ -1,0 +1,71 @@
+{# ══════════════════════════════════════════════════
+   Jinja2 Reusable Macros — Give, We Sell.
+   Usage: {% from '당근마켓/_macros.html' import status_badge, phone_format_locked_js %}
+══════════════════════════════════════════════════ #}
+
+
+{# ──────────────────────────────────────────────────
+   _badge_inner(status, class_name)
+   내부 공유 구현 — STATUS_COLORS 단일 정의
+────────────────────────────────────────────────── #}
+{% macro _badge_inner(status, class_name) -%}
+{%- set STATUS_COLORS = {
+  '접수됨':   {'color': '#86BBD8', 'bg': 'rgba(134,187,216,0.14)'},
+  '수거예정': {'color': '#FFD166', 'bg': 'rgba(255,209,102,0.14)'},
+  '판매중':   {'color': '#F26419', 'bg': 'rgba(242,100,25,0.14)'},
+  '정산완료': {'color': '#48C78E', 'bg': 'rgba(72,199,142,0.14)'},
+  '취소됨':   {'color': 'rgba(255,255,255,0.35)', 'bg': 'rgba(255,255,255,0.06)'},
+} -%}
+{%- set sc = STATUS_COLORS.get(status, STATUS_COLORS['접수됨']) -%}
+<span class="{{ class_name }}" style="background:{{ sc.bg }}; color:{{ sc.color }}">
+  <span class="s-dot" style="background:{{ sc.color }}"></span>
+  {{ status }}
+</span>
+{%- endmacro %}
+
+
+{# ──────────────────────────────────────────────────
+   status_badge(status)
+   인라인 스타일 방식의 상태 배지 (status 페이지용)
+   예: {{ status_badge(app.status) }}
+────────────────────────────────────────────────── #}
+{% macro status_badge(status) %}{{ _badge_inner(status, 's-badge') }}{% endmacro %}
+
+
+{# ──────────────────────────────────────────────────
+   result_status_badge(status)
+   조회 결과 카드용 배지 (lookup 결과 목록)
+   예: {{ result_status_badge(app.status) }}
+────────────────────────────────────────────────── #}
+{% macro result_status_badge(status) %}{{ _badge_inner(status, 'result-status') }}{% endmacro %}
+
+
+{# ──────────────────────────────────────────────────
+   phone_format_locked_js(input_id)
+   "010-" 접두사 고정 전화번호 포맷터 JS 스니펫
+   예: {{ phone_format_locked_js('phone_input') }}
+────────────────────────────────────────────────── #}
+{% macro phone_format_locked_js(input_id) -%}
+(function () {
+  const el  = document.getElementById('{{ input_id }}');
+  if (!el) return;
+  const nav = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+
+  el.addEventListener('keydown', e => {
+    if (nav.includes(e.key) || e.ctrlKey || e.metaKey) return;
+    const pos = e.target.selectionStart ?? 0;
+    const end = e.target.selectionEnd   ?? 0;
+    if (e.key === 'Backspace' && pos <= 4 && end <= 4) { e.preventDefault(); return; }
+    if (e.key === 'Delete'    && pos <  4 && end <= 4) { e.preventDefault(); return; }
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+  });
+
+  el.addEventListener('input', e => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+    const all    = '010' + digits.slice(3);
+    e.target.value = all.length > 7
+      ? `010-${all.slice(3,7)}-${all.slice(7)}`
+      : all.length > 3 ? `010-${all.slice(3)}` : '010-';
+  });
+}());
+{%- endmacro %}

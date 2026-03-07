@@ -1,259 +1,80 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>이용후기 목록 — Give, We Sell.</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --primary: #F26419;
-    --secondary: #86BBD8;
-    --dark: #1a1a1a;
-    --light: #fafafa;
-  }
+{% extends '당근마켓/_base.html' %}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+{% block title %}이용후기 목록 — Give, We Sell.{% endblock %}
 
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--dark);
-    color: var(--light);
-    min-height: 100vh;
-    cursor: none;
-    overflow-x: hidden;
-  }
+{% block page_css %}
+  /* ── Page ── */
+  .list-page   { position: relative; z-index: 1; padding: 88px 24px 60px; max-width: 720px; margin: 0 auto; }
 
-  #bgCanvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .cursor {
-    width: 12px; height: 12px;
-    background: var(--primary);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-  }
-  .cursor-follower {
-    width: 36px; height: 36px;
-    border: 2px solid var(--secondary);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 9998;
-    transition: all 0.15s ease;
-    opacity: 0.6;
-  }
-
-  /* Page */
-  .list-page {
-    position: relative;
-    z-index: 1;
-    padding: 88px 24px 60px;
-    max-width: 720px;
-    margin: 0 auto;
-  }
-
-  /* Header */
-  .list-header {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-
-  .list-badge {
+  /* ── Header ── */
+  .list-header { text-align: center; margin-bottom: 48px; }
+  .list-badge  {
     display: inline-block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 4px;
-    color: var(--secondary);
-    text-transform: uppercase;
-    border: 1px solid rgba(134,187,216,0.4);
-    padding: 6px 18px;
-    border-radius: 100px;
-    margin-bottom: 20px;
+    font-family: 'Montserrat',sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 4px; color: var(--secondary); text-transform: uppercase;
+    border: 1px solid rgba(134,187,216,.4); padding: 6px 18px;
+    border-radius: 100px; margin-bottom: 20px;
   }
-
-  .list-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(44px, 7vw, 80px);
-    line-height: 0.95;
-    color: var(--light);
-  }
-
+  .list-title      { font-family: 'Bebas Neue',sans-serif; font-size: clamp(44px,7vw,80px); line-height: .95; }
   .list-title span { color: var(--primary); }
 
-  /* Stats bar */
-  .stats-bar {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin-bottom: 40px;
-    padding: 20px 32px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
+  /* ── Stats bar ── */
+  .stats-bar  {
+    display: flex; justify-content: center; gap: 40px;
+    margin-bottom: 40px; padding: 20px 32px;
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px;
   }
-
-  .stat-item {
-    text-align: center;
-  }
-
-  .stat-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px;
-    line-height: 1;
-    color: var(--primary);
-  }
-
+  .stat-item  { text-align: center; }
+  .stat-num   { font-family: 'Bebas Neue',sans-serif; font-size: 36px; line-height: 1; color: var(--primary); }
   .stat-num.blue { color: var(--secondary); }
+  .stat-label { font-size: 11px; font-family: 'Montserrat',sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.35); margin-top: 4px; }
 
-  .stat-label {
-    font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin-top: 4px;
-  }
-
-  /* Empty */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: rgba(255,255,255,0.3);
-  }
-
+  /* ── Empty state ── */
+  .empty-state      { text-align: center; padding: 60px 20px; color: rgba(255,255,255,.3); }
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-state p { font-size: 15px; font-weight: 300; }
+  .empty-state p    { font-size: 15px; font-weight: 300; }
 
-  /* Review cards */
-  .reviews-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  /* ── Review cards ── */
+  .reviews-grid { display: flex; flex-direction: column; gap: 14px; }
+  .review-item  {
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px; padding: 20px 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color .2s, background .2s;
+    opacity: 0; transform: translateY(16px);
+    animation: fadeUp .4s ease forwards;
   }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .review-item:hover        { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.05); }
+  .review-item.like-item    { border-left: 3px solid rgba(72,199,142,.45); }
+  .review-item.dislike-item { border-left: 3px solid rgba(242,100,25,.45); }
+  .review-rating { font-size: 28px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+  .review-body   { flex: 1; }
+  .review-meta   { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .review-tag    { font-family: 'Montserrat',sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+  .tag-like      { background: rgba(72,199,142,.15); color: rgba(72,199,142,.9); }
+  .tag-dislike   { background: rgba(242,100,25,.15);  color: var(--primary); }
+  .review-id     { font-size: 11px; color: rgba(255,255,255,.2); font-family: 'Montserrat',sans-serif; }
+  .review-comment { font-size: 14px; font-weight: 300; color: rgba(255,255,255,.65); line-height: 1.65; }
+  .no-comment    { font-size: 13px; color: rgba(255,255,255,.2); font-style: italic; }
 
-  .review-item {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    padding: 20px 24px;
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    transition: border-color 0.2s ease, background 0.2s ease;
-    opacity: 0;
-    transform: translateY(16px);
-    animation: fadeUp 0.4s ease forwards;
+  /* ── Write CTA ── */
+  .write-cta { text-align: center; margin-top: 40px; }
+  .write-btn  {
+    display: inline-block; background: var(--primary); color: white;
+    font-family: 'Montserrat',sans-serif; font-size: 13px; font-weight: 900;
+    letter-spacing: 2px; text-transform: uppercase; padding: 14px 40px;
+    border-radius: 100px; text-decoration: none; cursor: none;
+    transition: background .2s, box-shadow .2s;
   }
-
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .review-item:hover {
-    border-color: rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.05);
-  }
-
-  .review-item.like-item { border-left: 3px solid rgba(72,199,142,0.45); }
-  .review-item.dislike-item { border-left: 3px solid rgba(242,100,25,0.45); }
-
-  .review-rating {
-    font-size: 28px;
-    flex-shrink: 0;
-    line-height: 1;
-    margin-top: 2px;
-  }
-
-  .review-body { flex: 1; }
-
-  .review-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
-  }
-
-  .review-tag {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border-radius: 100px;
-  }
-
-  .tag-like    { background: rgba(72,199,142,0.15); color: rgba(72,199,142,0.9); }
-  .tag-dislike { background: rgba(242,100,25,0.15); color: var(--primary); }
-
-  .review-id {
-    font-size: 11px;
-    color: rgba(255,255,255,0.2);
-    font-family: 'Montserrat', sans-serif;
-  }
-
-  .review-comment {
-    font-size: 14px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.65);
-    line-height: 1.65;
-  }
-
-  .no-comment {
-    font-size: 13px;
-    color: rgba(255,255,255,0.2);
-    font-style: italic;
-  }
-
-  /* Write CTA */
-  .write-cta {
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .write-btn {
-    display: inline-block;
-    background: var(--primary);
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 14px 40px;
-    border-radius: 100px;
-    text-decoration: none;
-    cursor: none;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .write-btn:hover {
-    background: #d9540f;
-    box-shadow: 0 8px 24px rgba(242,100,25,0.35);
-  }
+  .write-btn:hover { background: #d9540f; box-shadow: 0 8px 24px rgba(242,100,25,.35); }
 
   @media (max-width: 600px) {
     .stats-bar { gap: 24px; padding: 16px 20px; }
   }
-</style>
-</head>
-<body>
+{% endblock %}
 
-<canvas id="bgCanvas"></canvas>
-<div class="cursor" id="cursor"></div>
-<div class="cursor-follower" id="follower"></div>
-
-{% include '당근마켓/_navbar.html' %}
-
+{% block content %}
 <main class="list-page">
 
   <div class="list-header">
@@ -313,10 +134,4 @@
   </div>
 
 </main>
-
-<script src="/static/js/danggn-fx.js"></script>
-<script>
-  DanggnFX.autoInit();
-</script>
-</body>
-</html>
+{% endblock %}

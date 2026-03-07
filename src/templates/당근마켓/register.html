@@ -1,58 +1,46 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>회원가입 — Give, We Sell.</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
-<script src="/static/js/danggn-fx.js"></script>
-<style>
-  :root { --primary:#F26419; --secondary:#86BBD8; --dark:#1a1a1a; --light:#fafafa; }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Noto Sans KR',sans-serif; background:var(--dark); color:var(--light); min-height:100vh; cursor:none; overflow-x:hidden; display:flex; align-items:center; justify-content:center; padding:40px 16px; }
-  #bgCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
-  .cursor { width:12px; height:12px; background:var(--primary); border-radius:50%; position:fixed; pointer-events:none; z-index:9999; transition:transform .1s ease; }
-  .cursor-follower { width:36px; height:36px; border:2px solid var(--secondary); border-radius:50%; position:fixed; pointer-events:none; z-index:9998; transition:all .15s ease; opacity:.6; }
+{% extends '당근마켓/_base.html' %}
+
+{% block title %}회원가입 — Give, We Sell.{% endblock %}
+
+{% block body_style %}
+  {{ super() }}
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+{% endblock %}
+
+{# 로그인/회원가입 페이지는 네브바 미사용 #}
+{% block navbar %}{% endblock %}
+
+{% block page_css %}
   .card {
-    position:relative; z-index:1;
-    background:rgba(20,20,20,.7); backdrop-filter:blur(20px);
-    border:1px solid rgba(255,255,255,.09); border-radius:20px;
-    padding:48px; width:100%; max-width:440px;
+    position: relative; z-index: 1;
+    padding: 48px;
+    width: 100%; max-width: 440px;
   }
-  .card-title { font-family:'Bebas Neue',sans-serif; font-size:40px; margin-bottom:8px; }
-  .card-sub { font-size:14px; color:rgba(255,255,255,.45); margin-bottom:36px; }
-  .form-group { margin-bottom:20px; }
-  label { display:block; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); margin-bottom:8px; font-family:'Montserrat',sans-serif; }
-  input { width:100%; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:14px 18px; color:var(--light); font-family:'Noto Sans KR',sans-serif; font-size:15px; outline:none; transition:all .2s; cursor:none; }
-  input:focus { border-color:rgba(242,100,25,.45); background:rgba(255,255,255,.07); box-shadow:0 0 0 3px rgba(242,100,25,.08); }
-  .btn { width:100%; background:var(--primary); color:#fff; font-family:'Montserrat',sans-serif; font-size:15px; font-weight:900; letter-spacing:2px; text-transform:uppercase; padding:18px; border-radius:100px; border:none; cursor:none; transition:all .2s; margin-top:8px; }
-  .btn:hover { background:#d9540f; box-shadow:0 8px 28px rgba(242,100,25,.35); }
-  .error { background:rgba(242,100,25,.1); border:1px solid rgba(242,100,25,.3); border-radius:10px; padding:12px 16px; font-size:14px; color:var(--primary); margin-bottom:20px; }
-  .hint { font-size:12px; color:rgba(255,255,255,.3); margin-top:6px; }
-  .footer-link { text-align:center; margin-top:24px; font-size:13px; color:rgba(255,255,255,.4); }
-  .footer-link a { color:var(--secondary); text-decoration:none; }
-  .footer-link a:hover { text-decoration:underline; }
-</style>
-</head>
-<body>
-<canvas id="bgCanvas"></canvas>
-<div class="cursor" id="cursor"></div>
-<div class="cursor-follower" id="follower"></div>
-<div class="card">
+{% endblock %}
+
+{% block content %}
+<div class="card glass-card">
   <h1 class="card-title">회원가입</h1>
   <p class="card-sub">계정을 만들고 신청 현황을 간편하게 관리하세요.</p>
+
   {% if error %}
   <div class="error">{{ error }}</div>
   {% endif %}
+
   <form method="post" action="/customer/register">
     {{ csrf_input(request) | safe }}
     <div class="form-group">
       <label for="email">이메일</label>
-      <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+      <input type="email" id="email" name="email" placeholder="your@email.com"
+             required autocomplete="email">
     </div>
     <div class="form-group">
       <label for="password">비밀번호</label>
-      <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="new-password" minlength="6">
+      <input type="password" id="password" name="password" placeholder="••••••••"
+             required autocomplete="new-password" minlength="6">
       <p class="hint">6자 이상 입력해주세요. (관리자 계정은 12자 이상 필요)</p>
     </div>
     <div class="form-group">
@@ -67,18 +55,10 @@
     </div>
     <button type="submit" class="btn">계정 만들기 →</button>
   </form>
+
   <p class="footer-link">이미 계정이 있으신가요? <a href="/customer/login">로그인</a></p>
-  <p class="footer-link" style="margin-top:8px;"><a href="/danggn" style="color:rgba(255,255,255,.3);">← 홈으로</a></p>
+  <p class="footer-link" style="margin-top:8px;">
+    <a href="/danggn" style="color:rgba(255,255,255,.3);">← 홈으로</a>
+  </p>
 </div>
-<script>
-  function fmtPhone(el) {
-    const d = el.value.replace(/\D/g, '').slice(0, 11);
-    if (d.length <= 3)      el.value = d;
-    else if (d.length <= 7) el.value = d.slice(0,3) + '-' + d.slice(3);
-    else                    el.value = d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7);
-  }
-  DanggnFX.initCursor();
-  DanggnFX.createBgCanvas(document.getElementById('bgCanvas'));
-</script>
-</body>
-</html>
+{% endblock %}
