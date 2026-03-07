@@ -177,12 +177,50 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
   .cta-btn span         { position: relative; z-index: 1; transition: color .4s; }
   .cta-btn:hover span   { color: white; }
   .cta-disclaimer { margin-top: 24px; font-size: 12px; color: rgba(255,255,255,.45); }
-  .cta-accent     { position: absolute; font-family: 'Bebas Neue',sans-serif; font-size: clamp(100px,20vw,280px); color: rgba(255,255,255,.06); white-space: nowrap; pointer-events: none; bottom: -20px; left: 50%; transform: translateX(-50%); letter-spacing: -4px; }
+  /* SELL IT 배경 워터마크 — 전체 배경을 채우며 위로 무한 스크롤 */
+  .cta-watermark {
+    position: absolute; inset: 0;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .cta-watermark-inner {
+    display: flex; flex-direction: column; gap: 0;
+    animation: watermarkScroll 18s linear infinite;
+    will-change: transform;
+  }
+  @keyframes watermarkScroll {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+  }
+  .cta-watermark-row {
+    display: flex; gap: 40px; white-space: nowrap; padding: 8px 0;
+  }
+  .cta-watermark-word {
+    font-family: 'Bebas Neue',sans-serif;
+    font-size: clamp(80px,14vw,200px);
+    color: rgba(255,255,255,.055);
+    letter-spacing: -2px; line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* 연락처 푸터 — CTA 섹션 내부 하단 */
+  .cta-contact {
+    position: absolute; bottom: 20px; left: 0; right: 0;
+    text-align: center; font-size: 13px;
+    color: rgba(255,255,255,.45); letter-spacing: .3px;
+    z-index: 1;
+  }
+  .cta-contact .footer-email { font-size: 13px; }
+
   #cta .cta-tag, #cta .cta-title, #cta .cta-sub, #cta .cta-btn, #cta .cta-disclaimer { position: relative; z-index: 1; }
-  #cta .cta-accent { z-index: 1; }
 
   /* ── Section canvases ── */
   .section-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+  /* ── 로켓 불꽃 flicker ── */
+  @keyframes flameFlicker {
+    from { opacity: .85; transform-origin: right center; }
+    to   { opacity: 1;   transform-origin: right center; }
+  }
 
   /* ── Easter egg ── */
   @keyframes carrotFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 80%{opacity:.8} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
@@ -402,19 +440,22 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 <!-- SECTION 4: CTA -->
 <section id="cta">
   <canvas class="section-canvas" id="ctaCanvas"></canvas>
-  <div class="cta-accent">SELL IT</div>
+
+  <!-- SELL IT 배경 워터마크 (위로 무한 스크롤) -->
+  <div class="cta-watermark" id="ctaWatermark"></div>
+
   <div class="cta-tag">지금 바로 시작하세요</div>
   <h2 class="cta-title">당신의 짐이<br>현금이 됩니다.</h2>
   <p class="cta-sub">물건은 당신이, 거래는 우리가, 수익은 다시 당신에게.</p>
   <a href="/danggn/apply" class="cta-btn"><span>지금 신청하기 →</span></a>
   <p class="cta-disclaimer">신청은 무료이며, 판매 성사 시에만 수수료가 발생합니다.</p>
-</section>
 
-<!-- Footer -->
-<footer style="background:rgba(10,10,10,.95); border-top:1px solid rgba(255,255,255,.06); padding:28px 32px; text-align:center; font-family:'Noto Sans KR',sans-serif; font-size:13px; color:rgba(255,255,255,.35); letter-spacing:.3px; scroll-snap-align:start;">
-  관련 문의 (연락처) :
-  <a href="mailto:qorwlsdn31@daum.net" class="footer-email">qorwlsdn31@daum.net</a>
-</footer>
+  <!-- 연락처 — CTA 섹션 하단에 항상 표시 -->
+  <div class="cta-contact">
+    관련 문의 :
+    <a href="mailto:qorwlsdn31@daum.net" class="footer-email">qorwlsdn31@daum.net</a>
+  </div>
+</section>
 
 <!-- Auth Modal -->
 <div id="authOverlay" class="auth-overlay"></div>
@@ -476,6 +517,28 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 {% endblock %}
 
 {% block page_js %}
+  /* ── CTA SELL IT 워터마크 동적 생성 ── */
+  (function buildWatermark() {
+    const wm = document.getElementById('ctaWatermark');
+    if (!wm) return;
+    const words = ['SELL IT', 'GIVE IT', 'SELL IT', 'CASH IT', 'SELL IT', 'FREE IT', 'SELL IT'];
+    const rowCount = 10; // 행 × 2 (seamless loop)
+    const inner = document.createElement('div');
+    inner.className = 'cta-watermark-inner';
+    for (let r = 0; r < rowCount * 2; r++) {
+      const row = document.createElement('div');
+      row.className = 'cta-watermark-row';
+      for (let c = 0; c < 6; c++) {
+        const span = document.createElement('span');
+        span.className = 'cta-watermark-word';
+        span.textContent = words[(r + c) % words.length];
+        row.appendChild(span);
+      }
+      inner.appendChild(row);
+    }
+    wm.appendChild(inner);
+  })();
+
   /* ── Section canvas init (index는 섹션별 캔버스 사용) ── */
   DanggnFX.createBgCanvas(document.getElementById('introCanvas'),   { fullscreen: false, orbCount: 7,  emberCount: 70 });
   DanggnFX.createBgCanvas(document.getElementById('howCanvas'),     { fullscreen: false, orbCount: 4,  emberCount: 22, colorScheme: 'light' });
@@ -657,28 +720,28 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
         card.style.opacity   = s.opacity;
         card.style.transform = s.transform;
       });
-      if (prevBtn) prevBtn.disabled = (idx === 0);
-      if (nextBtn) nextBtn.disabled = (idx === total - 1);
+      // 무한루프 — 양쪽 버튼 항상 활성
+      if (prevBtn) prevBtn.disabled = false;
+      if (nextBtn) nextBtn.disabled = false;
+    }
+
+    // 무한 루프: 경계에서 순간이동(transition 꺼짐) → rAF 후 재개
+    function wrapTo(newIdx) {
+      track.style.transition = 'none';
+      idx = newIdx;
+      render();
+      requestAnimationFrame(() => { track.style.transition = ''; });
     }
 
     function go(delta) {
-      idx = Math.max(0, Math.min(total - 1, idx + delta));
+      const next = idx + delta;
+      if (next >= total) { wrapTo(0); return; }
+      if (next < 0)      { wrapTo(total - 1); return; }
+      idx = next;
       render();
     }
 
-    function autoNext() {
-      if (idx >= total - 1) {
-        // 순환 wrap: 전환 없이 idx=0으로 순간이동 후 transition 복원
-        track.style.transition = 'none';
-        idx = 0;
-        render();
-        requestAnimationFrame(() => {
-          track.style.transition = '';
-        });
-      } else {
-        go(1);
-      }
-    }
+    function autoNext() { go(1); }
 
     const startAuto = () => { timer = setInterval(autoNext, 3500); };
     const stopAuto  = () => clearInterval(timer);
@@ -699,13 +762,14 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
     });
   })();
 
-  /* ── Truck drag & rocket return (ghost approach) ── */
+  /* ── Truck drag & rocket booster return ── */
   (function initTruckDrag() {
     const truck = document.querySelector('.truck-anim');
     const track = document.querySelector('.truck-track');
     if (!truck || !track) return;
 
-    let ghost = null, isDragging = false, returning = false, retFrame = null, boostTimer = null;
+    let ghost = null, flame = null;
+    let isDragging = false, returning = false, retFrame = null;
     let curX = 0, curY = 0, offX = 0, offY = 0;
     const dotEl = document.getElementById('cursor');
 
@@ -715,9 +779,10 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
     truck.addEventListener('pointerdown', e => {
       e.preventDefault();
       if (returning) cancelReturn();
-      const r  = truck.getBoundingClientRect();
+      const r = truck.getBoundingClientRect();
       curX = r.left + r.width / 2; curY = r.top + r.height / 2;
       offX = e.clientX - curX;     offY = e.clientY - curY;
+
       ghost = document.createElement('div');
       ghost.textContent = '🚚';
       ghost.style.cssText = `position:fixed;left:${curX}px;top:${curY}px;font-size:26px;transform:translate(-50%,-50%) scale(1.35);pointer-events:none;z-index:9995;user-select:none;transition:transform .12s;filter:drop-shadow(0 4px 14px rgba(242,100,25,.7));`;
@@ -738,7 +803,7 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
       if (!isDragging) return;
       isDragging = false;
       if (dotEl) dotEl.style.transform = '';
-      if (ghost)  ghost.style.transform = 'translate(-50%,-50%) scale(1)';
+      if (ghost) ghost.style.transform = 'translate(-50%,-50%) scale(1)';
       startReturn();
     }
     truck.addEventListener('pointerup',     onRelease);
@@ -746,39 +811,72 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 
     function getTarget() { const tr = track.getBoundingClientRect(); return { x: tr.left, y: tr.top }; }
 
+    // 로켓 부스터 — 트럭 뒤에 붙어있는 단일 불꽃 엘리먼트
+    function createFlame() {
+      flame = document.createElement('div');
+      flame.style.cssText = [
+        'position:fixed',
+        'pointer-events:none',
+        'z-index:9994',
+        'width:36px',
+        'height:20px',
+        'border-radius:0 50% 50% 0',
+        'background:linear-gradient(to left,rgba(255,220,0,.95),rgba(255,130,0,.8),rgba(255,60,0,.5),transparent)',
+        'transform-origin:right center',
+        'filter:blur(1.5px)',
+        'animation:flameFlicker .08s ease-in-out infinite alternate',
+      ].join(';');
+      document.body.appendChild(flame);
+    }
+
+    function updateFlame(dx, dy) {
+      if (!flame || !ghost) return;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI; // 이동방향 각도
+      const gx = parseFloat(ghost.style.left);
+      const gy = parseFloat(ghost.style.top);
+      // 불꽃은 트럭 반대방향(후방)에 위치
+      const bx = gx - Math.cos(angle * Math.PI / 180) * 18;
+      const by = gy - Math.sin(angle * Math.PI / 180) * 18;
+      flame.style.left = bx + 'px';
+      flame.style.top  = gy - 10 + 'px';
+      flame.style.transform = `rotate(${angle}deg) scaleX(${0.8 + Math.random() * 0.5})`;
+    }
+
     function startReturn() {
       returning = true;
-      boostTimer = setInterval(() => { if (!ghost) return; const t = getTarget(); spawnBooster(curX, curY, t.x - curX, t.y - curY); }, 45);
+      createFlame();
+
+      // 출발 시 단일 부스트 버스트 (큰 불꽃 한 방)
+      const burst = document.createElement('div');
+      burst.textContent = '🔥';
+      burst.style.cssText = `position:fixed;left:${curX}px;top:${curY}px;font-size:42px;pointer-events:none;z-index:9996;transform:translate(-50%,-50%) scale(0.5);opacity:1;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s ease;`;
+      document.body.appendChild(burst);
+      requestAnimationFrame(() => {
+        burst.style.transform = 'translate(-50%,-50%) scale(2.5)';
+        burst.style.opacity   = '0';
+      });
+      setTimeout(() => burst.remove(), 520);
+
+      // 천천히 귀환 (lerp 0.04 — 부드럽고 느리게)
       (function loop() {
         const t = getTarget(), dx = t.x - curX, dy = t.y - curY, dist = Math.hypot(dx, dy);
-        if (dist < 5) { finishReturn(); return; }
-        curX += dx * .14; curY += dy * .14;
+        if (dist < 6) { finishReturn(); return; }
+        curX += dx * 0.04; curY += dy * 0.04;
         if (ghost) { ghost.style.left = curX + 'px'; ghost.style.top = curY + 'px'; }
+        updateFlame(dx, dy);
         retFrame = requestAnimationFrame(loop);
       })();
     }
 
-    function cancelReturn() { clearInterval(boostTimer); cancelAnimationFrame(retFrame); returning = false; if (ghost) { ghost.remove(); ghost = null; } }
-    function finishReturn() { cancelReturn(); truck.style.opacity = ''; truck.style.animation = ''; }
-
-    function spawnBooster(x, y, dx, dy) {
-      const len    = Math.hypot(dx, dy) || 1;
-      const bx = -(dx / len), by = -(dy / len);
-      const emojis = ['🔥','🔥','✨','💨','⚡'];
-      for (let i = 0; i < 2; i++) {
-        const p = document.createElement('div');
-        const spread = (Math.random() - .5) * 28, dist = 18 + Math.random() * 24, size = 10 + Math.random() * 10;
-        p.style.cssText = `position:fixed;left:${x}px;top:${y}px;font-size:${size}px;pointer-events:none;z-index:9990;transform:translate(-50%,-50%);opacity:1;transition:left .4s ease-out,top .4s ease-out,opacity .4s ease-out,transform .4s ease-out;`;
-        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        document.body.appendChild(p);
-        requestAnimationFrame(() => {
-          p.style.left      = (x + bx * dist + spread * Math.abs(by)) + 'px';
-          p.style.top       = (y + by * dist + spread * Math.abs(bx)) + 'px';
-          p.style.opacity   = '0';
-          p.style.transform = 'translate(-50%,-50%) scale(.2)';
-        });
-        setTimeout(() => p.remove(), 420);
-      }
+    function cancelReturn() {
+      cancelAnimationFrame(retFrame);
+      returning = false;
+      if (ghost) { ghost.remove(); ghost = null; }
+      if (flame) { flame.remove(); flame = null; }
+    }
+    function finishReturn() {
+      cancelReturn();
+      truck.style.opacity = ''; truck.style.animation = '';
     }
   })();
 {% endblock %}
