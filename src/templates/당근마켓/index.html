@@ -2,21 +2,9 @@
 
 {% block title %}Give, We Sell.{% endblock %}
 
-{# index는 scroll-snap 레이아웃 — html 엘리먼트에 스크롤 속성 추가 #}
-{% block html_style %}
-html {
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-  scroll-behavior: smooth;
-  /* 스크롤바 숨김 (스크롤 기능은 유지) */
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE / Edge */
-}
-html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
-{% endblock %}
+{% block html_style %}{% endblock %}
 
-{# 스크롤-스냅 페이지는 min-height 불필요 #}
-{% block body_style %}{% endblock %}
+{% block body_style %}min-height: 100vh;{% endblock %}
 
 {# 섹션별 캔버스 사용 — 전역 bgCanvas 불필요 #}
 {% block bg_canvas %}{% endblock %}
@@ -25,7 +13,7 @@ html::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 {% block page_css %}
   /* ── Sections ── */
   section {
-    height: 100vh; scroll-snap-align: start;
+    min-height: 100vh;
     display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden;
   }
